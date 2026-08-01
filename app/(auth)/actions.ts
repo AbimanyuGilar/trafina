@@ -21,7 +21,7 @@ export async function register({ name, email, password }: RegisterType) {
 		body: {
 			name,
 			email,
-			password
+			password,
 		}
 	})
 }

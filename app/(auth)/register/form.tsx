@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, SubmitEvent } from 'react';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { register } from '../actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+
 
 interface RegisterFormData {
   name: string;
@@ -12,7 +13,7 @@ interface RegisterFormData {
   password: string;
 }
 
-export default function RegisterForm(): React.ReactElement {
+export default function RegisterForm() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -30,9 +31,9 @@ export default function RegisterForm(): React.ReactElement {
     }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    setIsRegistering(true)
+  const handleSubmit = async (e: SubmitEvent): Promise<void> => {
     e.preventDefault();
+    setIsRegistering(true)
     try {
 			await register(formData)
 			toast.success("Berhasil mendaftar, silahkan login.")
