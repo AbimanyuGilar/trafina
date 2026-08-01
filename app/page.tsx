@@ -3,12 +3,8 @@
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client'; // Sesuaikan path auth-client project kamu
 import { 
-  ArrowRight, 
-  ShieldCheck, 
-  TrendingUp, 
-  PieChart, 
+  ArrowRight,
   Wallet, 
-  CheckCircle2, 
   Loader2 
 } from 'lucide-react';
 
@@ -39,7 +35,7 @@ export default function HomePage() {
               </div>
             ) : session ? (
               <Link
-                href="/auth-redirect"
+                href="/dashboard"
                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all"
               >
                 Dashboard

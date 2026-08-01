@@ -5,11 +5,11 @@ import { redirect } from "next/navigation"
 const routes = [
   {
     role: 'ADMIN',
-    redirect: '/admin/dashboard'
+    redirect: '/admin'
   },
   {
     role: 'USER',
-    redirect: '/user/dashboard'
+    redirect: '/owner'
   }
 ]
 

@@ -4,27 +4,19 @@ import { headers } from "next/headers"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-	title: 'Dashboard'
+	title: 'Admin Dashboard'
 }
 
-const page = async () => {
+const AdminPage = async () => {
 	const session = await auth.api.getSession({
 		headers: await headers()
 	})
 
-	if (!session) {
-		redirect('/login')
-	}
-
-	if (session?.user.role !== 'USER') {
-		redirect('/')
-	}
-
   return (
 		<>
-			<h1>Dashboard User</h1>
+			<h1>Dashboard Admin</h1>
 		</>
   )
 }
 
-export default page
+export default AdminPage

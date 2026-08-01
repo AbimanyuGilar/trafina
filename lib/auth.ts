@@ -1,33 +1,56 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaPg } from "@prisma/adapter-pg";
 import { nextCookies } from "better-auth/next-js";
+import { waitUntil } from "@vercel/functions";
+import { sendMail } from "./email";
+import { getVerificationEmailHTML } from "./get-verification-email-html";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter });
 export const auth = betterAuth({
-    database: prismaAdapter(prisma, {
-        provider: "postgresql",
-    }),
-    emailAndPassword: { 
-        enabled: true, 
-    },
-    user: {
-        additionalFields: {
-            role: {
-                type: ['ADMIN', 'USER'],
-                required: false,
-                defaultValue: 'USER',
-                input: false
-            }
-        }
-    },
-    plugins: [
-        nextCookies()
-    ],
-    rateLimit: {
-        window: 60,
-        max: 50
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+    onExistingUserSignUp: async ({ user }) => {
+      waitUntil(                                                                                                   
+        sendMail({
+          from: 'Itechnocup <gilarwaluyo@gmail.com>',
+          to: user.email,
+          subject: 'Verify your email address.',
+          text: 'Seseorang mencoba mendaftar dengan email Anda. Jika ini adalah Anda, silahkan login.'
+        })
+      )
     }
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: ['ADMIN', 'OWNER', 'STAFF'],
+        input: false,
+        defaultValue: 'OWNER'
+      }
+    }
+  },
+  emailVerification: {                    
+    autoSignInAfterVerification: true,                                                     
+    sendVerificationEmail: async ({ user, url }) => {                                                              
+      const verificationUrl = new URL(url);                                                                        
+      verificationUrl.searchParams.set("callbackURL", "/auth-redirect");                                               
+
+      waitUntil(                                                                                                   
+        sendMail({
+          from: 'Itechnocup <gilarwaluyo@gmail.com>',
+          to: user.email,
+          subject: 'Verify your email address.',
+          html: getVerificationEmailHTML(verificationUrl.toString(), user.name)
+        })
+      )
+    }
+  },
+  plugins: [nextCookies()]
 });

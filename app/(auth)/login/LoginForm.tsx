@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, SubmitEvent } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { login } from '../actions';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { authClient } from '@/lib/auth-client';
 
 interface LoginFormData {
   email: string;
@@ -21,7 +22,9 @@ const LoginForm = () => {
     password: '',
     rememberMe: false,
   });
+
   const [isLoading, setIsLoading] = useState<boolean>(false)
+	const [errorMessage, setErrorMessage] = useState<string>()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { name, value, type, checked } = e.target;
@@ -31,28 +34,32 @@ const LoginForm = () => {
     }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
+  async function handleSubmit(e: SubmitEvent) {
+    e.preventDefault()
     setIsLoading(true)
+    
+    const { error } = await authClient.signIn.email({
+      ...formData,
+      callbackURL: '/dashboard'
+    })
 
-		const result = await login(formData)
-		
-		if (!result?.success) {
-			setIsLoading(false)
-			if (result?.error) {
-				toast.error(result?.error)
-				return
-			}
-			toast.error('Terjadi kesalahan. Coba lagi nanti.')
-			return			
-		}
+    if (error) {
+      setIsLoading(false)
+			setErrorMessage(error.message)
+      return
+    }
 
-		toast.success('Berhasil login.')
-		router.push('/auth-redirect')
-		setIsLoading(false)
-  };
+    toast.success("Berhasil login.")
+    router.push('/dashboard')
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4" method="POST">
+			{
+				errorMessage && (
+					<div className={"text-center rounded-md p-2 text-sm text-red-500 bg-red-200"}>{errorMessage}</div>
+				)
+			}
 			{/* Input Email */}
 			<div>
 				<label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">

@@ -8,9 +8,6 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  Wallet,
-  Receipt,
-  TrendingUp,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -22,7 +19,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/owner", icon: LayoutDashboard },
 ];
 
 export default function DashboardShell({
@@ -68,7 +65,7 @@ export default function DashboardShell({
           {/* Identity & Logo App */}
           <Link href="/dashboard" className="flex items-center gap-2 group">
             <span className="font-bold text-lg text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-              FinansialApp - Admin
+              FinansialApp
             </span>
           </Link>
         </div>
