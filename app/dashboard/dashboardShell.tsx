@@ -19,7 +19,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/owner", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ];
 
 export default function DashboardShell({
