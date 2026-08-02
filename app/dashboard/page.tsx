@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 import DashboardShell from "./dashboardShell";
 
-// Lazy load komponen halaman
 const OwnerPage = dynamic(() => import("./owner/OwnerPage"));
 const AdminPage = dynamic(() => import("./admin/AdminPage"));
 const StaffPage = dynamic(() => import("./staff/StaffPage"));

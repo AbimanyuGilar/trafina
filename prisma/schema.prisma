@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -23,9 +18,99 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  stores        Store[]
 
   @@unique([email])
   @@map("user")
+}
+
+model Store {
+  id String @id @default(cuid())
+  name String
+  userId String
+  products Product[]
+  categories Category[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users User @relation(fields: [userId], references: [id])
+  paymentMethods PaymentMethod[]
+
+  @@map("store")
+}
+
+model Product {
+  id String @id @default(cuid())
+  name String
+  price Int
+  stock Int
+  storeId String
+  store Store @relation(fields: [storeId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productTransactions ProductTransaction[]
+  productCategories ProductCategory[]
+
+  @@map("product")
+}
+
+model ProductCategory {
+  id String @id @default(cuid())
+  productId String
+  CategoryId String
+
+  product Product @relation(fields: [productId], references: [id])
+  category Category @relation(fields: [CategoryId], references: [id])
+
+  @@map("productCategory")
+}
+
+model Category {
+  id String @id @default(cuid())
+  name String
+  storeId String
+  
+  productCategories ProductCategory[]
+  
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@map("category")
+}
+
+model PaymentMethod {
+  id String @id @default(cuid())
+  name String
+  transactions Transaction[]
+  storeId String
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@map("paymentMethod")
+}
+
+model Transaction {
+  id String @id @default(cuid())
+  paymentMethodId String
+  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productTransactions ProductTransaction[]
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  @@map("transaction")
+}
+
+model ProductTransaction {
+  id String @id @default(cuid())
+  productId String
+  transactionId String
+  quantity Int
+  priceAtPurchase Int
+  
+  product Product @relation(fields: [productId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  @@map("productTransaction")
 }
 
 model Session {
