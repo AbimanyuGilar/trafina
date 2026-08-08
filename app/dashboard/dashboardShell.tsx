@@ -13,7 +13,8 @@ import {
   FileUser,
   Store,
   ShelvingUnit,
-  ShoppingBag
+  ShoppingBag,
+  Warehouse
 } from "lucide-react";
 
 const navItems = [
@@ -29,16 +30,22 @@ const navItems = [
     icon: ShoppingBag
   },
   {
+    label: "Inventaris", 
+    href: "/inventory",
+    roles: ["OWNER", "STAFF"],
+    icon: ShelvingUnit
+  },
+  {
     label: "Toko", 
     href: "/store",
     roles: ["OWNER", "STAFF"],
     icon: Store
   },
   {
-    label: "Inventaris", 
-    href: "/inventory",
+    label: "Gudang", 
+    href: "/warehouse",
     roles: ["OWNER", "STAFF"],
-    icon: ShelvingUnit
+    icon: Warehouse
   },
   {
     label: "Karyawan", 
