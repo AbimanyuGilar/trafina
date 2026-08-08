@@ -58,12 +58,12 @@ export default function HomePage() {
       <section className="py-20 lg:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center flex-1 flex flex-col justify-center items-center">
         {/* Heading */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-4xl">
-          Kendalikan Arus Kas & Impian Finansialmu dalam Satu Dashboard
+          Kendalikan Arus Finansialmu dalam Satu Dashboard
         </h1>
 
         {/* Subtitle */}
         <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl leading-relaxed">
-          Platform manajemen keuangan modern yang membantu memantau pengeluaran, menyusun anggaran, dan menganalisis laporan secara *real-time*.
+          Platform manajemen keuangan modern yang membantu memantau pengeluaran, menyusun anggaran, dan menganalisis laporan.
         </p>
       </section>
 
