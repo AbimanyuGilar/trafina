@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { waitUntil } from "@vercel/functions";
 import { sendMail } from "./email";
 import { getVerificationEmailHTML } from "./get-verification-email-html";
+import { username, organization } from "better-auth/plugins";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter });
@@ -33,7 +34,12 @@ export const auth = betterAuth({
         type: ['ADMIN', 'OWNER', 'STAFF'],
         input: false,
         defaultValue: 'OWNER'
-      }
+      },
+      displayName: {
+        type: "string",
+        required: false,
+        defaultValue: "",
+      },
     }
   },
   emailVerification: {                    
@@ -52,5 +58,8 @@ export const auth = betterAuth({
       )
     }
   },
-  plugins: [nextCookies()]
+  plugins: [
+    nextCookies(),
+    organization(),
+  ]
 });

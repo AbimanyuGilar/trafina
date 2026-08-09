@@ -18,24 +18,82 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
-  stores        Store[]
+  invitations   Invitation[]
+  members Member[]
 
   @@unique([email])
   @@map("user")
 }
 
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stores      Store[]
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("organization")
+}
+
+model Invitation {
+	id String @id
+	email String
+	inviter User @relation(fields: [inviterId], references: [id])
+	inviterId String
+	organization Organization @relation(fields: [organizationId], references: [id])
+	organizationId String
+	role String?
+	status String
+	createdAt DateTime @db.Timestamptz(3)
+	expiresAt DateTime @db.Timestamptz(3)
+	@@map("invitation")
+}
+
+model Member {
+  id String @id @default(cuid())
+  organizationId String
+  userId String
+  role String
+  permissions String[] @default([])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessibleStores MemberStore[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("member")
+}
+
 model Store {
   id String @id @default(cuid())
   name String
-  userId String
   products Product[]
   categories Category[]
+  paymentMethods PaymentMethod[]
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberStores MemberStore[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  users User @relation(fields: [userId], references: [id])
-  paymentMethods PaymentMethod[]
 
   @@map("store")
+}
+
+model MemberStore {
+  id        String   @id @default(cuid())
+  memberId  String
+  storeId   String
+
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, storeId])
+  @@map("member_store")
 }
 
 model Product {

@@ -45,7 +45,7 @@ export default function RegisterForm() {
     const { name, email, password } = formData
 
     const { error } = await authClient.signUp.email({
-      name,
+      displayName: name,
       email,
       password
     })
