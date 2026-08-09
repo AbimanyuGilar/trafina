@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Dashboard'
 }
 
-const StaffPage = async () => {
+const StaffDashboard = async () => {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -18,4 +18,4 @@ const StaffPage = async () => {
   )
 }
 
-export default StaffPage
+export default StaffDashboard

@@ -3,19 +3,19 @@ import { headers } from "next/headers"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-	title: 'Dashboard'
+	title: 'Admin Dashboard'
 }
 
-const OwnerPage = async () => {
+const AdminDashboard = async () => {
 	const session = await auth.api.getSession({
 		headers: await headers()
 	})
 
   return (
 		<>
-			<h1>Dashboard Owner</h1>
+			<h1>Dashboard Admin</h1>
 		</>
   )
 }
 
-export default OwnerPage
+export default AdminDashboard

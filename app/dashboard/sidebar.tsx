@@ -25,31 +25,31 @@ const navItems = [
   },
   {
     label: "Kasir", 
-    href: "/cashier",
+    href: "/dashboard/cashier",
     roles: ["OWNER", "STAFF"],
     icon: ShoppingBag
   },
   {
     label: "Inventaris", 
-    href: "/inventory",
+    href: "/dashboard/inventory",
     roles: ["OWNER", "STAFF"],
     icon: ShelvingUnit
   },
   {
     label: "Toko", 
-    href: "/store",
+    href: "/dashboard/store",
     roles: ["OWNER", "STAFF"],
     icon: Store
   },
   {
     label: "Gudang", 
-    href: "/warehouse",
+    href: "/dashboard/warehouse",
     roles: ["OWNER", "STAFF"],
     icon: Warehouse
   },
   {
     label: "Karyawan", 
-    href: "/staff",
+    href: "/dashboard/staff",
     roles: ["OWNER"],
     icon: FileUser
   },
