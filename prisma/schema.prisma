@@ -30,13 +30,34 @@ model Organization {
   name      String
   slug      String   @unique
   logo      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  metadata String?
+
   stores      Store[]
   members     Member[]
   invitations Invitation[]
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@map("organization")
+}
+
+model Member {
+  id String @id @default(cuid())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  role String
+
+  permissions String[] @default([])
+  accessibleStores MemberStore[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@map("member")
 }
 
 model Invitation {
@@ -51,22 +72,6 @@ model Invitation {
 	createdAt DateTime @db.Timestamptz(3)
 	expiresAt DateTime @db.Timestamptz(3)
 	@@map("invitation")
-}
-
-model Member {
-  id String @id @default(cuid())
-  organizationId String
-  userId String
-  role String
-  permissions String[] @default([])
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessibleStores MemberStore[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([organizationId, userId])
-  @@map("member")
 }
 
 model Store {
@@ -181,6 +186,9 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrganizationId String?
+	activeTeamId String?
+
 
   @@unique([token])
   @@index([userId])

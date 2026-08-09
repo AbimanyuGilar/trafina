@@ -5,62 +5,21 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import {
+  LucideIcon,
   Menu,
   X,
-  LayoutDashboard,
   LogOut,
   ChevronRight,
-  FileUser,
-  Store,
-  ShelvingUnit,
-  ShoppingBag,
-  Warehouse
 } from "lucide-react";
-
-const navItems = [
-  {
-    label: "Dashboard", 
-    href: "/dashboard",
-    icon: LayoutDashboard
-  },
-  {
-    label: "Kasir", 
-    href: "/dashboard/cashier",
-    roles: ["OWNER", "STAFF"],
-    icon: ShoppingBag
-  },
-  {
-    label: "Inventaris", 
-    href: "/dashboard/inventory",
-    roles: ["OWNER", "STAFF"],
-    icon: ShelvingUnit
-  },
-  {
-    label: "Toko", 
-    href: "/dashboard/store",
-    roles: ["OWNER", "STAFF"],
-    icon: Store
-  },
-  {
-    label: "Gudang", 
-    href: "/dashboard/warehouse",
-    roles: ["OWNER", "STAFF"],
-    icon: Warehouse
-  },
-  {
-    label: "Karyawan", 
-    href: "/dashboard/staff",
-    roles: ["OWNER"],
-    icon: FileUser
-  },
-];
 
 export default function DashboardShell({
   user,
   children,
+  navItems,
 }: {
   user: any;
   children: React.ReactNode;
+  navItems: { label: string, href: string, icon: LucideIcon, roles?: string[] }[]
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);

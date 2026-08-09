@@ -1,7 +1,7 @@
 import { requireRoles } from '@/lib/auth-guard'
 
 const Staff = async () => {
-  const session = await requireRoles(["OWNER"])
+  const session = await requireRoles(["USER"])
   return (
     <div>Manage Karyawan</div>
   )

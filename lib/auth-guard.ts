@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 
 export async function requireRoles(requiredRoles: string[]) {
   const session = await auth.api.getSession({
@@ -12,7 +12,7 @@ export async function requireRoles(requiredRoles: string[]) {
   const userRole = session?.user?.role
 
   if (!userRole || !requiredRoles.includes(userRole)) {
-    redirect('/dashboard')
+    notFound()
   }
 
   return session
