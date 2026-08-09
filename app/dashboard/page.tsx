@@ -2,6 +2,9 @@ import { requireRoles } from "@/lib/auth-guard"
 import AdminDashboard from "./(admin)/AdminDashboard"
 import UserDashboard from "./(user)/UserDashboard"
 import { Metadata } from "next";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata(): Promise<Metadata> {
   const session = await requireRoles(['ADMIN', 'USER']);
