@@ -1,6 +1,5 @@
 import React from "react";
 import { requireRoles } from "@/lib/auth-guard";
-import { DynamicBreadcrumb } from "@/components/breadcrumb";
 import DashboardSidebar from "./DashboardSidebar";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -18,7 +17,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <>
       <DashboardSidebar user={session.user}>
-        <DynamicBreadcrumb />
         { children }
       </DashboardSidebar>
     </>

@@ -12,12 +12,12 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
-export function DynamicBreadcrumb() {
+export function DynamicBreadcrumb({className = ''}) {
   const pathname = usePathname();
   const segments = pathname.split('/').filter(Boolean);
 
   return (
-    <Breadcrumb className="my-4">
+    <Breadcrumb className={className}>
       <BreadcrumbList>
 
         {segments.map((segment, index) => {

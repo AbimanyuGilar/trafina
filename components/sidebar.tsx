@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronRight,
 } from "lucide-react";
+import { DynamicBreadcrumb } from "./breadcrumb";
 
 export default function DashboardShell({
   user,
@@ -182,9 +183,13 @@ export default function DashboardShell({
         </div>
       </aside>
 
+
       {/* MAIN CONTENT AREA */}
       <main className={`flex-1 bg-slate-50 p-4 sm:p-6 md:p-8 overflow-y-auto h-screen transition-all duration-300 ${!isSidebarOpen ? 'pt-16 md:pt-8 md:pl-16' : ''}`}>
         <div className="max-w-7xl mx-auto">
+          <DynamicBreadcrumb 
+            className="mb-6 px-1 text-sm font-medium tracking-wide text-slate-500" 
+          />
           {children}
         </div>
       </main>

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { authClient } from '@/lib/auth-client'; // Sesuaikan path auth-client project kamu
 import { 
   ArrowRight,
-  Wallet, 
   Loader2 
 } from 'lucide-react';
 
@@ -18,9 +17,6 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 text-white p-2 rounded-xl shadow-sm">
-              <Wallet className="w-5 h-5" />
-            </div>
             <span className="font-bold text-xl tracking-tight text-slate-900">
               FinansialApp
             </span>
@@ -71,7 +67,6 @@ export default function HomePage() {
       <footer className="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-sm">
           <div className="flex items-center gap-2 text-white font-semibold">
-            <Wallet className="w-4 h-4 text-blue-500" />
             FinansialApp
           </div>
           <p>© {new Date().getFullYear()} FinansialApp. All rights reserved.</p>

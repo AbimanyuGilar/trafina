@@ -13,7 +13,6 @@ const Organization = async () => {
   return (
     <>
       <OrganizationSidebar user={session.user}>
-        <DynamicBreadcrumb />
         organization page
       </OrganizationSidebar>
     </>
