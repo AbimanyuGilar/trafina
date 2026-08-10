@@ -1,6 +1,6 @@
 'use client'
 
-import Sidebar from "../../components/sidebar";
+import Wrapper from "../../components/wrapper";
 import React from "react";
 import {
   X,
@@ -57,12 +57,12 @@ const navItems = [
   },
 ];
 
-export default function DashboardSidebar({ children, user }: { children: React.ReactNode, user: any }) {
+export default function DashboardWrapper({ children, user }: { children: React.ReactNode, user: any }) {
   return (
     <>
-      <Sidebar user={user} navItems={navItems}>
+      <Wrapper user={user} navItems={navItems}>
         { children }
-      </Sidebar>
+      </Wrapper>
     </>
   );
 }

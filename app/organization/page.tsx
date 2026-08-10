@@ -1,6 +1,6 @@
 import { DynamicBreadcrumb } from "@/components/breadcrumb";
 import { requireRoles } from "@/lib/auth-guard";
-import OrganizationSidebar from "./OrganizationSidebar";
+import OrganizationWrapper from "./OrganizationWrapper";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,9 +12,9 @@ const Organization = async () => {
   const session = await requireRoles(["USER"])
   return (
     <>
-      <OrganizationSidebar user={session.user}>
+      <OrganizationWrapper user={session.user}>
         organization page
-      </OrganizationSidebar>
+      </OrganizationWrapper>
     </>
   )
 }

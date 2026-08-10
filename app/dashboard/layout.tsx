@@ -1,6 +1,6 @@
 import React from "react";
 import { requireRoles } from "@/lib/auth-guard";
-import DashboardSidebar from "./DashboardSidebar";
+import DashboardWrapper from "./DashboardWrapper";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -16,9 +16,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <>
-      <DashboardSidebar user={session.user}>
+      <DashboardWrapper user={session.user}>
         { children }
-      </DashboardSidebar>
+      </DashboardWrapper>
     </>
   );
 }
