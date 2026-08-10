@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
@@ -10,28 +10,85 @@ import {
   X,
   LogOut,
   ChevronRight,
+  ChevronDown,
 } from "lucide-react";
-import { DynamicBreadcrumb } from "./breadcrumb";
 
 export default function DashboardWrapper({
   user,
   children,
   navItems,
+  organization,
 }: {
   user: any;
+  organization?: any;
   children: React.ReactNode;
-  navItems: { label: string, href: string, icon: LucideIcon, roles?: string[] }[]
+  navItems: {
+    label: string;
+    href?: string;
+    icon: LucideIcon;
+    roles?: string[];
+    requiredOrganization?: boolean;
+    children?: {
+      label: string;
+      href: string;
+      roles?: string[];
+      requiredOrganization?: boolean;
+    }[];
+  }[];
 }) {
-  const [isWrapperOpen, setIsWrapperOpen] = useState(true);
+  const [isWrapperOpen, setIsWrapperOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const pathname = usePathname();
-  const filteredNavItems = navItems.filter(item => {
-    if (!item.roles) return true
 
-    return item.roles.includes(user.role)
-  })
+  useEffect(() => {
+    // Jalankan hanya di browser untuk mendeteksi mobile
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setIsWrapperOpen(false);
+    }
+  }, []);
+
+  const toggleSubMenu = (label: string) => {
+    setOpenSubMenus((prev) => ({
+      ...prev,
+      [label]: !prev[label],
+    }));
+  };
+
+  const isChildActive = (item: any) => {
+    return item.children?.some((child: any) => pathname === child.href);
+  };
+
+  const isSubMenuOpen = (item: any) => {
+    if (openSubMenus[item.label] !== undefined) {
+      return openSubMenus[item.label];
+    }
+    return isChildActive(item);
+  };
+
+  const filteredNavItems = navItems.filter(item => {
+    const checkRole = !item.roles || item.roles.includes(user?.role)
+    const checkOrganization = !item.requiredOrganization || Boolean(organization)
+
+    return checkRole && checkOrganization
+  }).map(item => {
+    if (item.children) {
+      return {
+        ...item,
+        children: item.children.filter(child => {
+          const checkChildRole = !child.roles || child.roles.includes(user?.role)
+          const checkChildOrganization = !child.requiredOrganization || Boolean(organization)
+          return checkChildRole && checkChildOrganization
+        })
+      }
+    }
+    return item;
+  }).filter(item => {
+    if (item.children && item.children.length === 0) return false;
+    return true;
+  });
 
   const handleLogout = async () => {
     try {
@@ -75,13 +132,22 @@ export default function DashboardWrapper({
         {/* Bagian Atas: Logo & Navigasi */}
         <div className="flex flex-col flex-1 min-h-0">
           {/* Branding Logo & Toggle */}
-          <div className={`h-16 border-b border-slate-100 flex items-center flex-shrink-0 transition-all duration-300 ${isWrapperOpen ? 'px-6 justify-between' : 'justify-center'}`}>
+          <div className={`h-16 border-b border-slate-100 flex items-center flex-shrink-0 transition-all duration-300 ${isWrapperOpen ? 'px-6 justify-between' : 'justify-center'} overflow-hidden`}>
             {isWrapperOpen && (
-              <Link href="/dashboard" className="flex items-center gap-2 group animate-in fade-in duration-300">
-                <span className="font-bold text-lg text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                  FinansialApp
-                </span>
-              </Link>
+              <div>
+                <Link href="/dashboard" className="flex items-center group animate-in fade-in duration-300">
+                  <span className="font-bold text-lg text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                    FinansialApp
+                  </span>
+                </Link>
+                {organization && (
+                  <div className="">
+                    <span className="inline-flex items-center rounded-full bg-slate-100/80 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-slate-700 border border-slate-200/80 shadow-xs">
+                      {organization.name}
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
             {/* Tombol Toggle Wrapper (Desktop only or close for mobile) */}
             <button
@@ -94,48 +160,179 @@ export default function DashboardWrapper({
           </div>
 
           {/* Menu Navigasi (Scrollable) */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-1">
+          <div className={`flex-1 overflow-y-auto space-y-1 transition-all duration-300 ${isWrapperOpen ? 'p-4' : 'px-2 py-4'} overflow-x-hidden`}>
             <nav className="space-y-1">
               {filteredNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const hasChildren = item.children && item.children.length > 0;
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    title={!isWrapperOpen ? item.label : undefined}
-                    className={`
-                      flex items-center rounded-lg text-sm font-medium transition-all duration-300
-                      ${
-                        isActive
-                          ? "bg-blue-50 text-blue-600 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                      }
-                      ${
-                        isWrapperOpen
-                          ? "px-3 py-2.5 justify-between w-full"
-                          : "w-10 h-10 justify-center mx-auto p-0"
-                      }
-                    `}
-                  >
-                    <div className={`flex items-center ${isWrapperOpen ? 'gap-3' : 'justify-center'}`}>
-                      <Icon
-                        size={18}
-                        strokeWidth={1.75}
-                        className={isActive ? "text-blue-600" : "text-slate-400"}
-                      />
-                      {isWrapperOpen && (
-                        <span className="whitespace-nowrap animate-in fade-in duration-300">
-                          {item.label}
-                        </span>
+                if (hasChildren) {
+                  const isOpen = isSubMenuOpen(item);
+                  const isAnyChildActive = isChildActive(item);
+
+                  return (
+                    <div key={item.label} className="relative group">
+                      {isWrapperOpen ? (
+                        /* Expandable menu ketika sidebar terbuka */
+                        <div>
+                          <button
+                            onClick={() => toggleSubMenu(item.label)}
+                            className={`
+                              w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 cursor-pointer focus:outline-none
+                              ${
+                                isAnyChildActive
+                                  ? "text-blue-600 font-semibold"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                              }
+                            `}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon
+                                size={18}
+                                strokeWidth={1.75}
+                                className={isAnyChildActive ? "text-blue-600" : "text-slate-400"}
+                              />
+                              <span className="whitespace-nowrap">{item.label}</span>
+                            </div>
+                            <ChevronDown
+                              size={16}
+                              className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+
+                          {/* Kontainer Item Sub-menu */}
+                          <div
+                            className={`
+                              mt-1 space-y-1 pl-9 overflow-hidden transition-all duration-300
+                              ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+                            `}
+                          >
+                            {item.children!.map((child) => {
+                              const isChildCurrent = pathname === child.href;
+                              return (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={() => {
+                                    if (window.innerWidth < 768) {
+                                      setIsWrapperOpen(false);
+                                    }
+                                  }}
+                                  className={`
+                                    block py-2 px-3 rounded-lg text-xs font-medium transition-colors
+                                    ${
+                                      isChildCurrent
+                                        ? "bg-blue-50/80 text-blue-600 font-semibold"
+                                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                    }
+                                  `}
+                                >
+                                  {child.label}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Collapsed icon dengan hover popover */
+                        <div className="flex justify-center py-1">
+                          <button
+                            onClick={() => {
+                              setIsWrapperOpen(true);
+                              setOpenSubMenus((prev) => ({ ...prev, [item.label]: true }));
+                            }}
+                            className={`
+                              w-10 h-10 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-300 focus:outline-none
+                              ${
+                                isAnyChildActive
+                                  ? "bg-blue-50 text-blue-600 font-semibold"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                              }
+                            `}
+                          >
+                            <Icon
+                              size={18}
+                              strokeWidth={1.75}
+                              className={isAnyChildActive ? "text-blue-600" : "text-slate-400"}
+                            />
+                          </button>
+
+                          {/* Popover */}
+                          <div className="absolute left-full top-0 ml-2 bg-white border border-slate-200 shadow-lg rounded-lg py-1.5 w-48 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-x-2 group-hover:translate-x-0 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="px-3 py-1.5 border-b border-slate-100 text-xs font-semibold text-slate-400">
+                              {item.label}
+                            </div>
+                            {item.children!.map((child) => {
+                              const isChildCurrent = pathname === child.href;
+                              return (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={() => {
+                                    if (window.innerWidth < 768) {
+                                      setIsWrapperOpen(false);
+                                    }
+                                  }}
+                                  className={`
+                                    block px-3 py-2 text-sm transition-colors
+                                    ${
+                                      isChildCurrent
+                                        ? "text-blue-600 bg-blue-50/50 font-medium"
+                                        : "text-slate-600 hover:text-blue-600 hover:bg-slate-50"
+                                    }
+                                  `}
+                                >
+                                  {child.label}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
-                    {isWrapperOpen && isActive && (
-                      <ChevronRight size={14} className="text-blue-600 animate-in fade-in duration-300" />
-                    )}
-                  </Link>
-                );
+                  );
+                } else {
+                  // Normal item tanpa sub-menu
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href || "#"}
+                      title={!isWrapperOpen ? item.label : undefined}
+                      onClick={() => {
+                        if (window.innerWidth < 768) {
+                          setIsWrapperOpen(false);
+                        }
+                      }}
+                      className={`
+                        flex items-center rounded-lg text-sm font-medium transition-all duration-300
+                        ${
+                          isActive
+                            ? "bg-blue-50 text-blue-600 font-semibold"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        }
+                        ${
+                          isWrapperOpen
+                            ? "px-3 py-2.5 justify-between w-full"
+                            : "w-10 h-10 justify-center mx-auto p-0"
+                        }
+                      `}
+                    >
+                      <div className={`flex items-center ${isWrapperOpen ? 'gap-3' : 'justify-center'}`}>
+                        <Icon
+                          size={18}
+                          strokeWidth={1.75}
+                          className={isActive ? "text-blue-600" : "text-slate-400"}
+                        />
+                        {isWrapperOpen && (
+                          <span className="whitespace-nowrap animate-in fade-in duration-300">
+                            {item.label}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                }
               })}
             </nav>
           </div>
@@ -256,9 +453,6 @@ export default function DashboardWrapper({
         {/* Main Content Area */}
         <main className="flex-1 bg-slate-50 p-4 sm:p-6 md:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
-            <DynamicBreadcrumb 
-              className="hidden lg:block mb-6 px-1 text-sm font-medium tracking-wide text-slate-500" 
-            />
             {children}
           </div>
         </main>

@@ -47,6 +47,9 @@ importers:
       nodemailer:
         specifier: ^9.0.3
         version: 9.0.3
+      nprogress:
+        specifier: ^0.2.0
+        version: 0.2.0
       pg:
         specifier: ^8.22.0
         version: 8.22.0
@@ -81,6 +84,9 @@ importers:
       '@types/nodemailer':
         specifier: ^8.0.1
         version: 8.0.1
+      '@types/nprogress':
+        specifier: ^0.2.3
+        version: 0.2.3
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
@@ -1728,6 +1734,9 @@ packages:
 
   '@types/nodemailer@8.0.1':
     resolution: {integrity: sha512-PxpaInm8V1JQDd4j0ds5HfvWQk8JupS1C0Picb96QJsrrRDjBH+DlK7L4ZdNSqNULhiZRQHc40nLVShaGxXAMw==}
+
+  '@types/nprogress@0.2.3':
+    resolution: {integrity: sha512-k7kRA033QNtC+gLc4VPlfnue58CM1iQLgn1IMAU8VPHGOj7oIHPp9UlhedEnD/Gl8evoCjwkZjlBORtZ3JByUA==}
 
   '@types/pg@8.20.0':
     resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
@@ -6149,6 +6158,8 @@ snapshots:
   '@types/nodemailer@8.0.1':
     dependencies:
       '@types/node': 20.19.43
+
+  '@types/nprogress@0.2.3': {}
 
   '@types/pg@8.20.0':
     dependencies:
