@@ -72,7 +72,7 @@ export default function DashboardWrapper({ children, user }: { children: React.R
         },
         {
           label: "Karyawan", 
-          href: "/dashboard/com-slug/staff",
+          href: `/dashboard/com/${organization?.slug}/staff`,
           roles: ["USER"],
           // requiredOrganization: true,
         },

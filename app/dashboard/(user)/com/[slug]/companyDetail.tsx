@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
   ArrowLeft,
@@ -15,24 +14,36 @@ import {
   Users, 
   FileText,
 } from 'lucide-react'
-
-// Contoh data dummy perusahaan (Bisa diganti dengan fetching data berdasarkan params.id)
-const companyData = {
-  id: '1',
-  name: 'PT Perusahaan Utama',
-  email: 'contact@perusahaanutama.co.id',
-  phone: '+62 21 5550 1234',
-  website: 'https://perusahaanutama.co.id',
-  address: 'Jl. Jendral Sudirman No. 45, Jakarta Selatan, DKI Jakarta 12190',
-  createdAt: '12 Januari 2024',
-}
+import { authClient } from '@/lib/auth-client'
+import DeleteCard from '@/components/deleteCard'
+import { redirect } from 'next/navigation'
+import NProgress from 'nprogress'
 
 export default function CompanyDetail({ companyData }: { companyData: any }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'activity'>('overview')
-  const params = useParams()
-  const slug = params.slug as string
+
+  const [showDeleteCard, setShowDeleteCard] = useState<boolean>(false)
+
+  const [isDeleteting, setIsDeleteting] = useState(false)
+  
+  async function handleDelete() {
+    setShowDeleteCard(true)
+  }
+
+  async function deleteCompany(orgId: string) {
+    NProgress.start()
+    setIsDeleteting(true)
+    
+    const { data, error } = await authClient.organization.delete({
+      organizationId: orgId, // required
+    });
+
+    redirect('/dashboard')
+  }
+
   return (
     <div className="w-full space-y-6">
+      <DeleteCard isLoading={isDeleteting} isOpen={showDeleteCard} onClose={() => setShowDeleteCard(false)} description={'Apakah anda yakin ingin menghapus perusahaan ini?'} onConfirm={() => deleteCompany(companyData.id)} />
       {/* 1. Header Navigation & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -46,19 +57,20 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                {companyData.name + ` ${slug}`}
+                {companyData.name}
               </h1>
             </div>
+              <p className='text-sm text-slate-500'>(Kamu sebagai {companyData.role === 'owner' ? 'pemilik' : 'karyawan'})</p>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
-          <button className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all cursor-pointer">
+          <Link href={`/edit/company/${companyData.slug}`} className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all cursor-pointer">
             <Edit3 size={16} strokeWidth={1.75} />
             <span>Edit</span>
-          </button>
-          <button className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg shadow-sm transition-all cursor-pointer">
+          </Link>
+          <button onClick={handleDelete} className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-rose-600 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg shadow-sm transition-all cursor-pointer">
             <Trash2 size={16} strokeWidth={1.75} />
             <span>Hapus</span>
           </button>
@@ -73,7 +85,7 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
           </div>
           <div>
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Karyawan</p>
-            <p className="text-lg font-semibold text-slate-900">-</p>
+            <p className="text-lg font-semibold text-slate-900">{companyData.members.length - 1}</p>
           </div>
         </div>
 
@@ -83,7 +95,7 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
           </div>
           <div>
             <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Toko</p>
-            <p className="text-lg font-semibold text-slate-900">-</p>
+            <p className="text-lg font-semibold text-slate-900">0</p>
           </div>
         </div>
       </div>
@@ -118,64 +130,86 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Kontak & Lokasi */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
-              Informasi Kontak
-            </h2>
-            <div className="space-y-3.5 text-sm">
-              <div className="flex items-start gap-3">
-                <Mail size={18} className="text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Email Resmi</p>
-                  <a href={`mailto:${companyData.email}`} className="text-blue-600 hover:underline font-medium">
-                    {companyData.email}
-                  </a>
-                </div>
-              </div>
+          {(companyData.metadata.email || companyData.metadata.phone || companyData.metadata.website) && (
+            <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
+              <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
+                Informasi Kontak
+              </h2>
+              <div className="space-y-3.5 text-sm">
+                {companyData.metadata.email && (
+                  <div className="flex items-start gap-3">
+                    <Mail size={18} className="text-slate-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-slate-500">Email Resmi</p>
+                      <a href={`mailto:${companyData.metadata.email}`} className="text-blue-600 hover:underline font-medium">
+                        {companyData.metadata.email}
+                      </a>
+                    </div>
+                  </div>
+                )}
 
-              <div className="flex items-start gap-3">
-                <Phone size={18} className="text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
-                  <p className="text-slate-800 font-medium">{companyData.phone}</p>
-                </div>
-              </div>
+                {companyData.metadata.phone && (
+                  <div className="flex items-start gap-3">
+                    <Phone size={18} className="text-slate-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
+                      <p className="text-slate-800 font-medium">{companyData.metadata.phone}</p>
+                    </div>
+                  </div>
+                )}
 
-              <div className="flex items-start gap-3">
-                <Globe size={18} className="text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Situs Web</p>
-                  <a href={companyData.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
-                    {companyData.website}
-                  </a>
-                </div>
+                {companyData.metadata.website && (
+                  <div className="flex items-start gap-3">
+                    <Globe size={18} className="text-slate-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-slate-500">Situs Web</p>
+                      <a href={companyData.metadata.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
+                        {companyData.metadata.website}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Alamat & Sistem */}
-          <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
-            <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
-              Alamat & Registrasi
-            </h2>
-            <div className="space-y-3.5 text-sm">
-              <div className="flex items-start gap-3">
-                <MapPin size={18} className="text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Alamat Lengkap</p>
-                  <p className="text-slate-800 font-medium leading-relaxed">{companyData.address}</p>
-                </div>
-              </div>
+          {(companyData.metadata.address || companyData.createdAt) && (
+            <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
+              <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
+                Alamat & Registrasi
+              </h2>
+              <div className="space-y-3.5 text-sm">
+                {companyData.metadata.address && (
+                  <div className="flex items-start gap-3">
+                    <MapPin size={18} className="text-slate-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-slate-500">Alamat Lengkap</p>
+                      <p className="text-slate-800 font-medium leading-relaxed">{companyData.metadata.address}</p>
+                    </div>
+                  </div>
+                )}
 
-              <div className="flex items-start gap-3">
-                <Calendar size={18} className="text-slate-400 mt-0.5" />
-                <div>
-                  <p className="text-xs text-slate-500">Tanggal Terdaftar</p>
-                  <p className="text-slate-800 font-medium">{companyData.createdAt}</p>
-                </div>
+                {companyData.createdAt && (
+                  <div className="flex items-start gap-3">
+                    <Calendar size={18} className="text-slate-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-slate-500">Tanggal Terdaftar</p>
+                      <p className="text-slate-800 font-medium">
+                        {companyData?.createdAt 
+                          ? new Date(companyData.createdAt).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })
+                          : '-'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 

@@ -13,21 +13,31 @@ import {
 import { authClient } from '@/lib/auth-client'
 import { generateUniqueSlug } from '@/lib/generate-slug'
 import { toast } from 'sonner'
-import NProgress from 'nprogress'
 
-export default function NewCompanyForm({ userId }: { userId: string }) {
+export default function EditCompanyForm({ userId, companyData }: { userId: string, companyData: any }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
+  console.log(companyData)
+
   // State untuk data form
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    website: '',
-    address: '',
+    name: companyData.name,
+    email: companyData.metadata.email,
+    phone: companyData.metadata.phone,
+    website: companyData.metadata.website,
+    address: companyData.metadata.address,
     description: '',
   })
+
+  const oldFormData = {
+    name: companyData.name,
+    email: companyData.metadata.email,
+    phone: companyData.metadata.phone,
+    website: companyData.metadata.website,
+    address: companyData.metadata.address,
+    description: '',
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -36,30 +46,33 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    NProgress.start()
     setIsLoading(true)
 
     const { name, email, phone, website, address, description } = formData
-    const slug = generateUniqueSlug(name)
 
-    const { data, error } = await authClient.organization.create({
-      name, // required
-      slug,
-      metadata: {
-        email,
-        phone,
-        website,
-        address,
-        description
+    const slug = (name !== oldFormData.name) ? generateUniqueSlug(name) : companyData.slug
+
+    console.log(slug)
+
+    const { data, error } = await authClient.organization.update({
+      data: {
+        name,
+        slug,
+        metadata: {
+          email,
+          phone,
+          website,
+          address,
+          description
+        },
       },
-      userId,
-      keepCurrentActiveOrganization: false,
+      organizationId: companyData.id
     });
     
     if (error) {
       toast.error(error.message)
     } else {
-      toast.success("Perusahaan berhasil ditambahkan")
+      toast.success("Perusahaan berhasil diperbarui")
       router.push(`/dashboard/com/${slug}`)
     }
 
