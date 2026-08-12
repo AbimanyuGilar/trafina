@@ -40,13 +40,19 @@ export default function DashboardWrapper({ children, user }: { children: React.R
       children: [
         {
           label: "Kasir", 
-          href: "/dashboard/cashier",
+          href: `/dashboard/com/${organization?.slug}/cashier`,
           roles: ["USER"],
           requiredOrganization: true,
         },
         {
           label: "Transaksi Manual", 
-          href: "/dashboard/manual-transaction",
+          href: `/dashboard/com/${organization?.slug}/manual-transaction`,
+          roles: ["USER"],
+          requiredOrganization: true,
+        },
+        {
+          label: "Riwayat Transaksi", 
+          href: `/dashboard/com/${organization?.slug}/transaction-history`,
           roles: ["USER"],
           requiredOrganization: true,
         },
@@ -59,14 +65,8 @@ export default function DashboardWrapper({ children, user }: { children: React.R
       requiredOrganization: true,
       children: [
         {
-          label: "Toko", 
-          href: "/dashboard/store",
-          roles: ["USER"],
-          requiredOrganization: true,
-        },
-        {
-          label: "Gudang", 
-          href: "/dashboard/warehouse",
+          label: "Inventaris", 
+          href: `/dashboard/com/${organization?.slug}/inventory`,
           roles: ["USER"],
           requiredOrganization: true,
         },
@@ -74,7 +74,7 @@ export default function DashboardWrapper({ children, user }: { children: React.R
           label: "Karyawan", 
           href: `/dashboard/com/${organization?.slug}/staff`,
           roles: ["USER"],
-          // requiredOrganization: true,
+          requiredOrganization: true,
         },
       ]
     },

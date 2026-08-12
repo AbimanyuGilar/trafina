@@ -21,7 +21,7 @@ export async function sendMail({ from, to, subject, html, text }: SendEmailParam
     await transporter.sendMail({
       from, to, subject, text, html
     })
-    console.log("nodemailer: ", 'Berhasil kirim email verifikasi')
+    console.log("nodemailer: ", 'Berhasil kirim email')
   } catch (err) {
     console.log("nodemailer: ", err)
   }

@@ -6,7 +6,8 @@ import { nextCookies } from "better-auth/next-js";
 import { waitUntil } from "@vercel/functions";
 import { sendMail } from "./email";
 import { getVerificationEmailHTML } from "./get-verification-email-html";
-import { username, organization } from "better-auth/plugins";
+import { organization } from "better-auth/plugins";
+import { getInvitationHTML } from "./get-invitation-html";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter });
@@ -45,9 +46,9 @@ export const auth = betterAuth({
 
       waitUntil(                                                                                                   
         sendMail({
-          from: 'Itechnocup <gilarwaluyo@gmail.com>',
+          from: 'Itechnocup',
           to: user.email,
-          subject: 'Verify your email address.',
+          subject: 'Verifikasi Alamat Email.',
           html: getVerificationEmailHTML(verificationUrl.toString(), user.name)
         })
       )
@@ -55,6 +56,16 @@ export const auth = betterAuth({
   },
   plugins: [
     nextCookies(),
-    organization(),
+    organization({
+      async sendInvitationEmail(data) {
+        const url = `http://localhost:3000/accept-invitation/${data.id}/com/${data.organization.slug}`;
+        sendMail({
+          to: data.email,
+          from: 'Itechnocup',
+          subject: 'Undangan Perusahaan',
+          html: getInvitationHTML({ url, org: data.organization.name })
+        });
+      },
+    }),
   ]
 });

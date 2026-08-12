@@ -32,9 +32,11 @@ model Organization {
   logo      String?
   metadata String?
 
-  stores      Store[]
   members     Member[]
   invitations Invitation[]
+  products Product[]
+  categories Category[]
+  paymentMethods PaymentMethod[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,7 +53,6 @@ model Member {
   role String
 
   permissions String[] @default([])
-  accessibleStores MemberStore[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,40 +75,13 @@ model Invitation {
 	@@map("invitation")
 }
 
-model Store {
-  id String @id @default(cuid())
-  name String
-  products Product[]
-  categories Category[]
-  paymentMethods PaymentMethod[]
-  organizationId String
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  memberStores MemberStore[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("store")
-}
-
-model MemberStore {
-  id        String   @id @default(cuid())
-  memberId  String
-  storeId   String
-
-  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-
-  @@unique([memberId, storeId])
-  @@map("member_store")
-}
-
 model Product {
   id String @id @default(cuid())
   name String
   price Int
   stock Int
-  storeId String
-  store Store @relation(fields: [storeId], references: [id])
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   productTransactions ProductTransaction[]
@@ -130,11 +104,11 @@ model ProductCategory {
 model Category {
   id String @id @default(cuid())
   name String
-  storeId String
+  organizationId String
   
   productCategories ProductCategory[]
   
-  store Store @relation(fields: [storeId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@map("category")
 }
@@ -143,9 +117,9 @@ model PaymentMethod {
   id String @id @default(cuid())
   name String
   transactions Transaction[]
-  storeId String
+  organizationId String
 
-  store Store @relation(fields: [storeId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@map("paymentMethod")
 }
