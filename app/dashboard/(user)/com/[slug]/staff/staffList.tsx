@@ -15,20 +15,32 @@ import {
 import DeleteCard from '@/components/deleteCard' // Path komponen DeleteCard Anda
 import { toast } from 'sonner'
 import { authClient } from '@/lib/auth-client'
+import { updateMemberPermissions } from './actions'
 
 export interface StaffItem {
   id: string
   name: string
   email: string
   role: string
+  permissions: string[]
+}
+
+const PERMISSION_LABELS: Record<string, string> = {
+  manage_inventory: 'Inventaris',
+  manage_transactions: 'Transaksi',
+  manage_staff: 'Karyawan',
+  manage_manual_transaction: 'Transaksi Manual',
+  manage_cashier: 'Kasir',
+  manage_transaction_history: 'Riwayat Transaksi'
 }
 
 interface StaffListProps {
   initialStaff: StaffItem[]
+  allPermissions: { id: string; name: string }[]
   user: any
 }
 
-export default function StaffList({ initialStaff, user }: StaffListProps) {
+export default function StaffList({ initialStaff, allPermissions, user }: StaffListProps) {
   const [staffList, setStaffList] = useState<StaffItem[]>(initialStaff)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -43,8 +55,7 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
 
   // State untuk Modal Edit
   const [selectedEditStaff, setSelectedEditStaff] = useState<StaffItem | null>(null)
-  const [editName, setEditName] = useState('')
-  const [editEmail, setEditEmail] = useState('')
+  const [editPermissions, setEditPermissions] = useState<string[]>([])
   const [isUpdating, setIsUpdating] = useState(false)
 
   // Filter data berdasarkan nama atau email
@@ -95,8 +106,15 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
   // Handler Buka Modal Edit
   const handleOpenEdit = (staff: StaffItem) => {
     setSelectedEditStaff(staff)
-    setEditName(staff.name)
-    setEditEmail(staff.email)
+    setEditPermissions(staff.permissions || [])
+  }
+
+  const handleTogglePermission = (permId: string) => {
+    setEditPermissions((prev) =>
+      prev.includes(permId)
+        ? prev.filter((id) => id !== permId)
+        : [...prev, permId]
+    )
   }
 
   // Handler Simpan Perubahan Edit
@@ -106,18 +124,19 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
 
     setIsUpdating(true)
     try {
-      // TODO: Panggil Server Action / API backend di sini
+      await updateMemberPermissions(selectedEditStaff.id, editPermissions)
+      toast.success(`Izin untuk ${selectedEditStaff.name} berhasil diperbarui`)
       setStaffList((prev) =>
         prev.map((item) =>
           item.id === selectedEditStaff.id
-            ? { ...item, name: editName, email: editEmail }
+            ? { ...item, permissions: editPermissions }
             : item
         )
       )
       setSelectedEditStaff(null)
     } catch (error) {
-      console.error('Gagal memperbarui karyawan:', error)
-      alert('Terjadi kesalahan saat memperbarui data.')
+      console.error('Gagal memperbarui izin:', error)
+      toast.error('Gagal memperbarui izin karyawan.')
     } finally {
       setIsUpdating(false)
     }
@@ -178,6 +197,9 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
                   <th scope="col" className="px-6 py-3.5">
                     Email
                   </th>
+                  <th scope="col" className="px-6 py-3.5">
+                    Izin
+                  </th>
                   <th scope="col" className="px-6 py-3.5 text-right">
                     Aksi
                   </th>
@@ -210,6 +232,30 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
                         <Mail size={15} className="text-slate-400 shrink-0" />
                         <span className="truncate">{staff.email}</span>
                       </div>
+                    </td>
+
+                    {/* Kolom Izin */}
+                    <td className="px-6 py-4 text-slate-600">
+                      {staff.role === 'owner' ? (
+                        <span className="inline-block px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 rounded-md">
+                          Akses Penuh
+                        </span>
+                      ) : staff.permissions && staff.permissions.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {staff.permissions.map((perm) => (
+                            <span
+                              key={perm}
+                              className="inline-block px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 rounded-md"
+                            >
+                              {PERMISSION_LABELS[perm] || perm}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          belum ada izin
+                        </span>
+                      )}
                     </td>
 
                     {/* Kolom Aksi */}
@@ -316,6 +362,95 @@ export default function StaffList({ initialStaff, user }: StaffListProps) {
                     <>
                       <Send size={15} />
                       <span>Kirim Undangan</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Izin Karyawan */}
+      {selectedEditStaff && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
+                  <Pencil size={18} strokeWidth={2} />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                  Edit Izin Karyawan
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedEditStaff(null)}
+                disabled={isUpdating}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold text-slate-800">{selectedEditStaff.name}</p>
+                <p className="text-xs text-slate-500">{selectedEditStaff.email}</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1.5">
+                  Daftar Izin Akses
+                </label>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {allPermissions.map((perm) => {
+                    const isChecked = editPermissions.includes(perm.name)
+                    const label = PERMISSION_LABELS[perm.name] || perm.name
+                    return (
+                      <label
+                        key={perm.id}
+                        className="flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleTogglePermission(perm.name)}
+                          className="w-4 h-4 text-blue-600 border-slate-300 rounded-sm focus:ring-blue-500"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-slate-900">{label}</span>
+                          <span className="text-xs text-slate-500">{perm.name}</span>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedEditStaff(null)}
+                  disabled={isUpdating}
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Simpan Perubahan</span>
                     </>
                   )}
                 </button>

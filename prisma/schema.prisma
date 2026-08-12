@@ -45,20 +45,39 @@ model Organization {
 }
 
 model Member {
-  id String @id @default(cuid())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId String
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id             String             @id @default(cuid())
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String
-  role String
+  role           String
 
-  permissions String[] @default([])
+  permissions    MemberPermission[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@unique([organizationId, userId])
   @@map("member")
+}
+
+model MemberPermission {
+  id           String     @id @default(cuid())
+  memberId     String
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, permissionId])
+  @@map("member_permission")
+}
+
+model Permission {
+  id                String             @id @default(cuid())
+  name              String             @unique
+  memberPermissions MemberPermission[]
+
+  @@map("permissions")
 }
 
 model Invitation {

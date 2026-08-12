@@ -9,8 +9,19 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
-export default function DashboardWrapper({ children, user }: { children: React.ReactNode, user: any}) {
+export default function DashboardWrapper({ 
+  children, 
+  user,
+  permissions = [],
+  isOwner = false,
+}: { 
+  children: React.ReactNode, 
+  user: any,
+  permissions?: string[],
+  isOwner?: boolean,
+}) {
    const { data: organization } = authClient.useActiveOrganization()
+  
   const navItems = [
     {
       label: "Perusahaan",
@@ -37,24 +48,28 @@ export default function DashboardWrapper({ children, user }: { children: React.R
       roles: ["USER"],
       icon: Banknote,
       requiredOrganization: true,
+      permission: "manage_transactions",
       children: [
         {
           label: "Kasir", 
           href: `/dashboard/com/${organization?.slug}/cashier`,
           roles: ["USER"],
           requiredOrganization: true,
+          permission: "manage_cashier",
         },
         {
           label: "Transaksi Manual", 
           href: `/dashboard/com/${organization?.slug}/manual-transaction`,
           roles: ["USER"],
           requiredOrganization: true,
+          permission: "manage_manual_transaction",
         },
         {
           label: "Riwayat Transaksi", 
           href: `/dashboard/com/${organization?.slug}/transaction-history`,
           roles: ["USER"],
           requiredOrganization: true,
+          permission: "manage_transaction_history",
         },
       ]
     },
@@ -69,20 +84,56 @@ export default function DashboardWrapper({ children, user }: { children: React.R
           href: `/dashboard/com/${organization?.slug}/inventory`,
           roles: ["USER"],
           requiredOrganization: true,
+          permission: "manage_inventory",
         },
         {
           label: "Karyawan", 
           href: `/dashboard/com/${organization?.slug}/staff`,
           roles: ["USER"],
           requiredOrganization: true,
+          permission: "manage_staff",
         },
       ]
     },
   ];
+
+  // Filter navItems berdasarkan izin
+  const filteredNavItems = navItems.map(item => {
+    let parentAllowed = true
+    if ('permission' in item && typeof item.permission === 'string') {
+      parentAllowed = isOwner || permissions.includes(item.permission)
+    }
+
+    if (item.children) {
+      const allowedChildren = item.children.filter(child => {
+        if ('permission' in child && typeof child.permission === 'string') {
+          return isOwner || permissions.includes(child.permission)
+        }
+        return true
+      })
+      
+      // Jika parent tidak diizinkan, dan tidak ada anak yang diizinkan, sembunyikan seluruh grup
+      if (!parentAllowed && allowedChildren.length === 0) {
+        return null
+      }
+
+      return {
+        ...item,
+        children: allowedChildren
+      }
+    }
+
+    return parentAllowed ? item : null
+  }).filter((item): item is NonNullable<typeof item> => {
+    if (!item) return false
+    // Jika punya submenu (children) tapi semua submenu disembunyikan, sembunyikan menu utamanya juga
+    if (item.children && item.children.length === 0) return false
+    return true
+  });
   
   return (
     <>
-      <Wrapper user={user} navItems={navItems} organization={organization}>
+      <Wrapper user={user} navItems={filteredNavItems} organization={organization}>
         { children }
       </Wrapper>
     </>
