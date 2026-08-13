@@ -5,7 +5,7 @@ const transporter: Transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_SERVER_USER,
     pass: process.env.EMAIL_SERVER_PASSWORD
-  }
+  },
 })
 
 interface SendEmailParams {

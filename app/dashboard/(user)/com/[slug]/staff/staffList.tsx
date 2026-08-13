@@ -91,19 +91,20 @@ export default function StaffList({ initialStaff, allPermissions, user }: StaffL
     if (!selectedDeleteStaff) return
 
     setIsDeleting(true)
-    try {
-      // TODO: Panggil Server Action / API backend di sini
+    const { data, error } = await authClient.organization.removeMember({
+      memberIdOrEmail: selectedDeleteStaff.id,
+    });
+
+    if (error) {
+      toast.error("Gagal mengeluarkan karyawan.")
+      setIsDeleting(false)
+    } else {
       setStaffList((prev) => prev.filter((item) => item.id !== selectedDeleteStaff.id))
       setSelectedDeleteStaff(null)
-    } catch (error) {
-      console.error('Gagal menghapus karyawan:', error)
-      alert('Terjadi kesalahan saat menghapus data.')
-    } finally {
-      setIsDeleting(false)
+      toast.success("Berhasil mengeluarkan karyawan.")
     }
   }
 
-  // Handler Buka Modal Edit
   const handleOpenEdit = (staff: StaffItem) => {
     setSelectedEditStaff(staff)
     setEditPermissions(staff.permissions || [])

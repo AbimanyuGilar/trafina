@@ -1,5 +1,3 @@
-'use client'
-
 import Wrapper from "../../components/wrapper";
 import React from "react";
 import {
@@ -7,9 +5,11 @@ import {
   Banknote,
   SquareChartGantt
 } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import DashboardWrapperClient from "./DashboardWrapperClient";
 
-export default function DashboardWrapper({ 
+export default async function DashboardWrapper({ 
   children, 
   user,
   permissions = [],
@@ -20,13 +20,15 @@ export default function DashboardWrapper({
   permissions?: string[],
   isOwner?: boolean,
 }) {
-   const { data: organization } = authClient.useActiveOrganization()
+  const organization = await auth.api.getFullOrganization({
+    headers: await headers(),
+  });
   
   const navItems = [
     {
       label: "Perusahaan",
       roles: ["USER"],
-      icon: Building2,
+      icon: "Building2",
       requiredOrganization: false,
       children: [
         {
@@ -46,7 +48,7 @@ export default function DashboardWrapper({
     {
       label: "Transaksi",
       roles: ["USER"],
-      icon: Banknote,
+      icon: "Banknote",
       requiredOrganization: true,
       permission: "manage_transactions",
       children: [
@@ -76,7 +78,7 @@ export default function DashboardWrapper({
     {
       label: "Manajemen", 
       roles: ["USER"],
-      icon: SquareChartGantt,
+      icon: "SquareChartGantt",
       requiredOrganization: true,
       children: [
         {
@@ -133,9 +135,9 @@ export default function DashboardWrapper({
   
   return (
     <>
-      <Wrapper user={user} navItems={filteredNavItems} organization={organization}>
+      <DashboardWrapperClient user={user} navItems={filteredNavItems} organization={organization}>
         { children }
-      </Wrapper>
+      </DashboardWrapperClient>
     </>
   );
 }

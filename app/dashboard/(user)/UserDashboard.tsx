@@ -13,12 +13,14 @@ const UserDashboard = ({ companies, activeCompany }: { companies: any, activeCom
 
 	async function handleChangeCompany(organizationId: string) {
 		NProgress.start()
-
+		
 		const { data, error } = await authClient.organization.setActive({
 			organizationId,
 		});
-
+		
 		router.push(`/dashboard/com/${data?.slug}`)
+
+		router.refresh()
 	}
 
   return (
