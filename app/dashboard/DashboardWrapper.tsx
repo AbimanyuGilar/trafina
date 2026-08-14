@@ -26,6 +26,20 @@ export default async function DashboardWrapper({
   
   const navItems = [
     {
+      label: "Dashboard",
+      roles: ["USER", "ADMIN"],
+      icon: "LayoutDashboard",
+      requiredOrganization: true,
+      children: [
+        {
+          label: "Dashboard", 
+          href: "/dashboard",
+          roles: ["USER", "ADMIN"],
+          requiredOrganization: false,
+        },
+      ]
+    },
+    {
       label: "Perusahaan",
       roles: ["USER"],
       icon: "Building2",
@@ -33,7 +47,7 @@ export default async function DashboardWrapper({
       children: [
         {
           label: "Daftar Perusahaan", 
-          href: "/dashboard",
+          href: "/dashboard/com",
           roles: ["USER"],
           requiredOrganization: false,
         },
@@ -53,18 +67,18 @@ export default async function DashboardWrapper({
       permission: "manage_transactions",
       children: [
         {
-          label: "Kasir", 
-          href: `/dashboard/com/${organization?.slug}/cashier`,
-          roles: ["USER"],
-          requiredOrganization: true,
-          permission: "manage_cashier",
-        },
-        {
           label: "Transaksi Manual", 
           href: `/dashboard/com/${organization?.slug}/manual-transaction`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_manual_transaction",
+        },
+        {
+          label: "Kasir", 
+          href: `/dashboard/com/${organization?.slug}/cashier`,
+          roles: ["USER"],
+          requiredOrganization: true,
+          permission: "manage_cashier",
         },
         {
           label: "Riwayat Transaksi", 
@@ -82,18 +96,18 @@ export default async function DashboardWrapper({
       requiredOrganization: true,
       children: [
         {
-          label: "Inventaris", 
-          href: `/dashboard/com/${organization?.slug}/inventory`,
+          label: "Produk", 
+          href: `/dashboard/com/${organization?.slug}/product`,
           roles: ["USER"],
           requiredOrganization: true,
-          permission: "manage_inventory",
+          permission: "manage_products",
         },
         {
           label: "Karyawan", 
           href: `/dashboard/com/${organization?.slug}/staff`,
           roles: ["USER"],
           requiredOrganization: true,
-          permission: "manage_staff",
+          permission: "manage_staffs",
         },
       ]
     },

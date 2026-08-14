@@ -13,6 +13,10 @@ export const getFullOrganization = async ({ organizationId, organizationSlug }: 
     }
   });
 
+  if (!org) {
+    return null;
+  }
+
   const metadata = typeof org?.metadata === 'string'
   ? (() => {
       try {

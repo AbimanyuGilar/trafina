@@ -7,6 +7,8 @@ import {
   Banknote,
   SquareChartGantt,
   HelpCircle,
+  LayoutDashboard,
+  History
 } from "lucide-react";
 
 // 1. Map string nama icon ke Komponen Lucide Icon
@@ -14,6 +16,8 @@ const iconMap: Record<string, React.ElementType> = {
   Building2: Building2,
   Banknote: Banknote,
   SquareChartGantt: SquareChartGantt,
+  LayoutDashboard: LayoutDashboard,
+  History: History
 };
 
 export default function DashboardWrapperClient({ 

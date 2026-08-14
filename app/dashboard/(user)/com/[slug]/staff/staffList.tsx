@@ -26,12 +26,12 @@ export interface StaffItem {
 }
 
 const PERMISSION_LABELS: Record<string, string> = {
-  manage_inventory: 'Inventaris',
+  manage_products: 'Produk',
   manage_transactions: 'Transaksi',
-  manage_staff: 'Karyawan',
+  manage_staffs: 'Karyawan',
   manage_manual_transaction: 'Transaksi Manual',
   manage_cashier: 'Kasir',
-  manage_transaction_history: 'Riwayat Transaksi'
+  manage_transaction_history: 'Riwayat Transaksi',
 }
 
 interface StaffListProps {
@@ -422,7 +422,6 @@ export default function StaffList({ initialStaff, allPermissions, user }: StaffL
                         />
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-slate-900">{label}</span>
-                          <span className="text-xs text-slate-500">{perm.name}</span>
                         </div>
                       </label>
                     )

@@ -22,26 +22,10 @@ const Dashboard = async () => {
   const userRole = session.user.role
   const userId = session.user.id
 
-  const companies = userRole === 'USER' ? await getListOrganization() : null
-
-  const companiesWithRole = companies ? await Promise.all(
-    companies?.map(async (com) => {
-      const companyData = await getFullOrganization({ organizationId: com.id })
-      const member = companyData?.members?.find(data => data.userId === userId)
-      
-      return {
-        ...com,
-        role: member?.role
-      }
-    })
-  ): companies
-
-  const activeCompany = await getFullOrganization()
-
   return (
     <>
       { userRole === 'ADMIN' && <AdminDashboard /> }
-      { userRole === 'USER' && <UserDashboard companies={companiesWithRole} activeCompany={activeCompany} /> }
+      { userRole === 'USER' && <UserDashboard /> }
     </>
   )
 }
