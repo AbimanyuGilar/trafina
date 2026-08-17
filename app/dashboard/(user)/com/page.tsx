@@ -22,7 +22,7 @@ const page = async () => {
     const activeCompany = await getFullOrganization()
 
   return (
-    <CompanyPage companies={companies} activeCompany={activeCompany} />
+    <CompanyPage companies={companiesWithRole} activeCompany={activeCompany} />
   )
 }
 

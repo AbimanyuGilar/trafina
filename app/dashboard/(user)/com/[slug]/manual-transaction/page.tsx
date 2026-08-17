@@ -1,16 +1,22 @@
-import React from 'react'
 import { requirePermission } from '@/lib/auth-guard'
 import ManualTransaction from './ManualTransaction'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
+import { getCategories } from './actions'
 
 const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = await params
   await requirePermission('manage_manual_transaction', slug)
 
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+
   const org = await auth.api.getFullOrganization({
     headers: await headers()
   })
+
+  const categories = await getCategories()
 
   const dummyTransactions = [
     {
@@ -68,7 +74,7 @@ const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: strin
     {
       id: 'tx_cuid_05',
       paymentMethodId: 'pm_qris_02',
-      totalPrice: 1200000,
+      totalPrice: 200000,
       detail: 'Pembayaran DP Pembuatan Logo & Branding',
       receipt: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500',
       paymentMethod: 'QRIS',
@@ -82,7 +88,7 @@ const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: strin
 
   return (
     <>
-      <ManualTransaction initialTransactions={dummyTransactions} organizationName={org?.name}/>
+      <ManualTransaction user={session?.user} initialTransactionCategories={categories} initialTransactions={dummyTransactions} organizationName={org?.name}/>
     </>
   )
 }

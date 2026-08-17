@@ -9,8 +9,6 @@ import NProgress from 'nprogress'
 export default function CompanyPage ({ companies, activeCompany }: { companies: any, activeCompany: any}) {
   const router = useRouter()
 
-  console.log(activeCompany)
-
   async function handleChangeCompany(organizationId: string) {
     NProgress.start()
     

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search,
   ArrowUpRight,
@@ -12,9 +12,11 @@ import {
   Calendar,
   CreditCard,
   FileText,
+  X,
 } from 'lucide-react'
-
-// Representasi tipe data sesuai Prisma Model Transaction
+import { toast } from 'sonner'
+import { getCategories, addCategory } from './actions'
+import Dropdown from '@/components/Dropdown'
 
 export interface TransactionItem {
   id: string
@@ -30,24 +32,133 @@ export interface TransactionItem {
   updatedAt?: Date | string
 }
 
+export interface TransactionCategory {
+  id: string
+  name: string
+  organizationId: string
+  createdAt: Date | string
+  updatedAt: Date | string
+}
+
 interface ManualTransactionProps {
   initialTransactions: TransactionItem[]
   organizationName?: string
+  user: any
+  initialTransactionCategories: TransactionCategory[]
 }
 
 export default function ManualTransaction({
   initialTransactions,
-  organizationName = 'Organisasi',
+  user,
+  initialTransactionCategories
 }: ManualTransactionProps) {
-  const [transactions] = useState<TransactionItem[]>(initialTransactions)
+  const [transactions, setTransactions] = useState<TransactionItem[]>(initialTransactions)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+  
+  // Add Transaction Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  // List kategori unik untuk dropdown filter
-  const categories = Array.from(
-    new Set(transactions.map((t) => t.transactionCategory))
-  )
+  // Add Category Modal State
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false)
+
+  const [categories, setCategories] = useState<TransactionCategory[]>(initialTransactionCategories)
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+  const [categoriesError, setCategoriesError] = useState<string | null>(null)
+
+  // Form State
+  const [formType, setFormType] = useState<'INCOME' | 'EXPENSE'>('INCOME')
+  const [formDetail, setFormDetail] = useState('')
+  const [formPrice, setFormPrice] = useState('')
+  const [formCategory, setFormCategory] = useState('')
+  const [formPaymentMethod, setFormPaymentMethod] = useState('')
+  const [formReceipt, setFormReceipt] = useState('')
+  const [newCategory, setNewCategory] = useState<{ name: string, type: string }>({ name: '', type: 'INCOME' })
+
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true)
+    setCategoriesError(null)
+    try {
+      const data = await getCategories()
+      setCategories(data || [])
+      console.log(data)
+    } catch (err: any) {
+      console.error('Error fetching categories:', err)
+      setCategoriesError(err.message || 'Gagal memuat kategori')
+    } finally {
+      setIsLoadingCategories(false)
+    }
+  }
+
+  const handleSubmitCategory = async (e: React.SubmitEvent) => {
+    e.preventDefault()
+
+    if (!newCategory.name.trim()) {
+      toast.error('Nama kategori harus diisi')
+      return
+    }
+
+    await addCategory(newCategory)
+
+    toast.success('Kategori berhasil ditambahkan!')
+    setIsAddCategoryModalOpen(false)
+
+    await fetchCategories()
+  }
+
+  const handleSubmitTransaction = (e: React.SubmitEvent) => {
+    e.preventDefault()
+
+    if (!formDetail.trim()) {
+      toast.error('Detail transaksi harus diisi')
+      return
+    }
+    if (!formPrice || Number(formPrice) <= 0) {
+      toast.error('Jumlah transaksi harus lebih dari 0')
+      return
+    }
+    if (!formCategory) {
+      toast.error('Kategori harus dipilih')
+      return
+    }
+    if (!formPaymentMethod) {
+      toast.error('Metode pembayaran harus dipilih')
+      return
+    }
+
+    const paymentMethodIds: Record<string, string> = {
+      'QRIS': 'pm_qris_local',
+      'Transfer Bank - BCA': 'pm_bank_transfer_local',
+      'Tunai': 'pm_cash_local',
+      'Kartu Kredit': 'pm_credit_card_local'
+    }
+
+    const newTransaction: TransactionItem = {
+      id: `tx_local_${Date.now()}`,
+      paymentMethodId: paymentMethodIds[formPaymentMethod] || 'pm_custom_local',
+      totalPrice: Number(formPrice),
+      detail: formDetail,
+      receipt: formReceipt,
+      paymentMethod: formPaymentMethod,
+      transactionCategory: formCategory,
+      transactionType: formType,
+      organizationId: 'local_org',
+      createdAt: new Date(),
+    }
+
+    setTransactions([newTransaction, ...transactions])
+    toast.success('Transaksi berhasil ditambahkan!')
+    setIsAddModalOpen(false)
+
+    // Reset Form
+    setFormDetail('')
+    setFormPrice('')
+    setFormCategory('')
+    setFormPaymentMethod('')
+    setFormReceipt('')
+    setFormType('INCOME')
+  }
 
   // Filter transaksi berdasarkan pencarian, tipe, dan kategori
   const filteredTransactions = transactions.filter((item) => {
@@ -62,15 +173,6 @@ export default function ManualTransaction({
 
     return matchesSearch && matchesType && matchesCategory
   })
-
-  // Kalkulasi Total Pemasukan & Pengeluaran
-  const totalIncome = filteredTransactions
-    .filter((t) => t.transactionType === 'INCOME')
-    .reduce((acc, curr) => acc + Number(curr.totalPrice), 0)
-
-  const totalExpense = filteredTransactions
-    .filter((t) => t.transactionType === 'EXPENSE')
-    .reduce((acc, curr) => acc + Number(curr.totalPrice), 0)
 
   // Helper Format Rupiah
   const formatRupiah = (amount: number | bigint) => {
@@ -99,11 +201,8 @@ export default function ManualTransaction({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            Manajemen Transaksi
+            Transaksi Manual
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Kelola dan pantau seluruh arus kas transaksi di {organizationName}
-          </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
@@ -117,63 +216,12 @@ export default function ManualTransaction({
 
           <button
             type="button"
+            onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
             <Plus size={16} strokeWidth={2} />
             <span>Tambah Transaksi</span>
           </button>
-        </div>
-      </div>
-
-      {/* 2. Stats Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {/* Total Pemasukan */}
-        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Total Pemasukan
-            </span>
-            <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
-              <ArrowUpRight size={18} strokeWidth={2} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">
-            {formatRupiah(totalIncome)}
-          </p>
-        </div>
-
-        {/* Total Pengeluaran */}
-        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Total Pengeluaran
-            </span>
-            <div className="p-2 rounded-lg bg-rose-50 text-rose-600 border border-rose-100">
-              <ArrowDownLeft size={18} strokeWidth={2} />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">
-            {formatRupiah(totalExpense)}
-          </p>
-        </div>
-
-        {/* Net Balance / Selisih */}
-        <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs space-y-2 sm:col-span-2 md:col-span-1">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Selisih Kas (Net)
-            </span>
-            <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-              <Receipt size={18} strokeWidth={2} />
-            </div>
-          </div>
-          <p
-            className={`text-2xl font-bold tracking-tight ${
-              totalIncome - totalExpense >= 0 ? 'text-slate-900' : 'text-rose-600'
-            }`}
-          >
-            {formatRupiah(totalIncome - totalExpense)}
-          </p>
         </div>
       </div>
 
@@ -234,22 +282,28 @@ export default function ManualTransaction({
           </div>
 
           {/* Filter Category Dropdown */}
-          {categories.length > 0 && (
-            <div className="relative">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 text-xs font-medium bg-white border border-slate-200 rounded-xl shadow-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
-              >
-                <option value="ALL">Semua Kategori</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div className={`relative min-w-[140px] ${isLoadingCategories && 'animate-pulse'}`}>
+            <Dropdown
+              disabled={isLoadingCategories}
+              options={[
+                { value: 'ALL', label: isLoadingCategories ? 'Memuat Kategori...' : 'Semua Kategori' },
+                ...categories.map((cat) => ({ value: cat.id, label: isLoadingCategories ? 'Memuat Kategori...' : cat.name }))
+              ]}
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              placeholder="Semua Kategori"
+              className="px-3 py-1.5 text-xs font-semibold h-9"
+            />
+          </div>
+          
+          <button
+          type="button"
+            onClick={() => setIsAddCategoryModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+          >
+            <Plus size={16} strokeWidth={2} />
+            <span>Tambah Kategori</span>
+          </button>
         </div>
       </div>
 
@@ -385,6 +439,267 @@ export default function ManualTransaction({
           Menampilkan <span className="font-semibold text-slate-700">{filteredTransactions.length}</span> dari <span className="font-semibold text-slate-700">{transactions.length}</span> transaksi
         </span>
       </div>
+
+      {/* Modal Tambah Transaksi */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          {/* Modal Container */}
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Tambah Transaksi Baru</h3>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSubmitTransaction} className="p-6 space-y-4">
+              {/* Transaction Type Selection */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  Tipe Transaksi
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setFormType('INCOME')}
+                    className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                      formType === 'INCOME'
+                        ? 'bg-white text-emerald-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Pemasukan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormType('EXPENSE')}
+                    className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                      formType === 'EXPENSE'
+                        ? 'bg-white text-rose-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Pengeluaran
+                  </button>
+                </div>
+              </div>
+
+              {/* Detail/Keterangan */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Detail / Keterangan
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formDetail}
+                  onChange={(e) => setFormDetail(e.target.value)}
+                  placeholder="Contoh: Pembelian Alat Tulis Kantor"
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+
+              {/* Total Price / Jumlah */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Jumlah (Rp)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">Rp</span>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={formPrice}
+                    onChange={(e) => setFormPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Category & Payment Method in grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Category Dropdown */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Kategori
+                  </label>
+                  {isLoadingCategories ? (
+                    <div className="h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-400 animate-pulse">
+                      Memuat kategori...
+                    </div>
+                  ) : categoriesError ? (
+                    <div className="space-y-1">
+                      <span className="text-xs text-rose-500">{categoriesError}</span>
+                      <button
+                        type="button"
+                        onClick={fetchCategories}
+                        className="block text-xs text-blue-600 hover:underline cursor-pointer"
+                      >
+                        Coba lagi
+                      </button>
+                    </div>
+                  ) : (
+                    <Dropdown
+                      options={categories.map((cat) => ({ value: cat.name, label: cat.name }))}
+                      value={formCategory}
+                      onChange={setFormCategory}
+                      placeholder="Pilih Kategori"
+                    />
+                  )}
+                </div>
+
+                {/* Payment Method Selector */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Metode Pembayaran
+                  </label>
+                  <Dropdown
+                    options={[
+                      { value: 'QRIS', label: 'QRIS' },
+                      { value: 'Transfer Bank - BCA', label: 'Transfer Bank - BCA' },
+                      { value: 'Tunai', label: 'Tunai' },
+                      { value: 'Kartu Kredit', label: 'Kartu Kredit' }
+                    ]}
+                    value={formPaymentMethod}
+                    onChange={setFormPaymentMethod}
+                    placeholder="Pilih Metode"
+                  />
+                </div>
+              </div>
+
+              {/* Link Struk (Optional) */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Link Struk / Lampiran (Opsional)
+                </label>
+                <input
+                  type="url"
+                  value={formReceipt}
+                  onChange={(e) => setFormReceipt(e.target.value)}
+                  placeholder="https://example.com/receipt.jpg"
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                >
+                  Simpan Transaksi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isAddCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          {/* Modal Container */}
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Tambah Kategori Transaksi Baru</h3>
+              <button
+                onClick={() => setIsAddCategoryModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSubmitCategory} className="p-6 space-y-4">
+              {/* Transaction Type Selection */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+                  Tipe Transaksi
+                </label>
+                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setNewCategory(prev => ({
+                      ...prev,
+                      type: 'INCOME'
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                      formType === 'INCOME'
+                        ? 'bg-white text-emerald-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Pemasukan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewCategory(prev => ({
+                      ...prev,
+                      type: 'EXPENSE'
+                    }))}
+                    className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+                      formType === 'EXPENSE'
+                        ? 'bg-white text-rose-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Pengeluaran
+                  </button>
+                </div>
+              </div>
+
+              {/* Detail/Keterangan */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Nama Kategori
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory(prev => ({
+                    ...prev,
+                    name: e.target.value
+                  }))}
+                  placeholder="Contoh: Re-stock barang"
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsAddCategoryModalOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                >
+                  Tambah Kategori
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
