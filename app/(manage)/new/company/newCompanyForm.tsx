@@ -14,6 +14,7 @@ import { authClient } from '@/lib/auth-client'
 import { generateUniqueSlug } from '@/lib/generate-slug'
 import { toast } from 'sonner'
 import NProgress from 'nprogress'
+import { createInitialData } from './actions'
 
 export default function NewCompanyForm({ userId }: { userId: string }) {
   const router = useRouter()
@@ -36,7 +37,6 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    NProgress.start()
     setIsLoading(true)
 
     const { name, email, phone, website, address, description } = formData
@@ -59,7 +59,10 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
     if (error) {
       toast.error(error.message)
     } else {
+      await createInitialData(data)
       toast.success("Perusahaan berhasil ditambahkan")
+
+      NProgress.start()
       router.push(`/dashboard/com/${slug}`)
     }
 

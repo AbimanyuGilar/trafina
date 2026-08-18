@@ -7,16 +7,19 @@ import {
   ArrowDownLeft,
   Receipt,
   Download,
-  Filter,
+  Trash2,
   Plus,
   Calendar,
   CreditCard,
   FileText,
   X,
+  Edit,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getCategories, addCategory } from './actions'
+import { getCategories, addCategory, deleteCategory } from './actions'
 import Dropdown from '@/components/Dropdown'
+import DeleteCard from '@/components/deleteCard'
+import Loading from '@/components/loading'
 
 export interface TransactionItem {
   id: string
@@ -35,9 +38,10 @@ export interface TransactionItem {
 export interface TransactionCategory {
   id: string
   name: string
-  organizationId: string
-  createdAt: Date | string
-  updatedAt: Date | string
+  type?: 'INCOME' | 'EXPENSE' | string
+  organizationId?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 interface ManualTransactionProps {
@@ -56,6 +60,8 @@ export default function ManualTransaction({
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+
+  const [categoryToDelete, setCategoryToDelete] = useState<TransactionCategory>({id: '', name: ''})
   
   // Add Transaction Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -67,6 +73,8 @@ export default function ManualTransaction({
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [categoriesError, setCategoriesError] = useState<string | null>(null)
 
+  const [isLoadingAddCategory, setIsLoadingAddCategory] = useState(false)
+
   // Form State
   const [formType, setFormType] = useState<'INCOME' | 'EXPENSE'>('INCOME')
   const [formDetail, setFormDetail] = useState('')
@@ -74,7 +82,9 @@ export default function ManualTransaction({
   const [formCategory, setFormCategory] = useState('')
   const [formPaymentMethod, setFormPaymentMethod] = useState('')
   const [formReceipt, setFormReceipt] = useState('')
-  const [newCategory, setNewCategory] = useState<{ name: string, type: string }>({ name: '', type: 'INCOME' })
+  const [newCategory, setNewCategory] = useState<{ name: string, type: 'INCOME' | 'EXPENSE' }>({ name: '', type: 'INCOME' })
+
+  const [deleteModal, setDeleteModal] = useState(false)
 
   const fetchCategories = async () => {
     setIsLoadingCategories(true)
@@ -92,19 +102,29 @@ export default function ManualTransaction({
   }
 
   const handleSubmitCategory = async (e: React.SubmitEvent) => {
+    setIsLoadingAddCategory(true)
     e.preventDefault()
 
     if (!newCategory.name.trim()) {
       toast.error('Nama kategori harus diisi')
       return
     }
+    
+    const result = await addCategory(newCategory)
 
-    await addCategory(newCategory)
+    setCategories(prev => [
+      result as TransactionCategory,
+      ...prev
+    ])
+
+    setNewCategory(prev => ({
+      ...prev,
+      name: ''
+    }))
 
     toast.success('Kategori berhasil ditambahkan!')
-    setIsAddCategoryModalOpen(false)
 
-    await fetchCategories()
+    setIsLoadingAddCategory(false)
   }
 
   const handleSubmitTransaction = (e: React.SubmitEvent) => {
@@ -174,6 +194,18 @@ export default function ManualTransaction({
     return matchesSearch && matchesType && matchesCategory
   })
 
+  const filteredCategories = categories.filter(item => {
+    const matchesType = typeFilter === 'ALL' || item.type === typeFilter
+
+    return matchesType
+  })
+
+  const filteredAddCategories = categories.filter(item => {
+    const matchesType = item.type === newCategory.type
+
+    return matchesType
+  })
+
   // Helper Format Rupiah
   const formatRupiah = (amount: number | bigint) => {
     return new Intl.NumberFormat('id-ID', {
@@ -193,6 +225,29 @@ export default function ManualTransaction({
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const [isDeleting, setIsDeleting] = useState(false)
+  const showDeleteCategoryModal = (category: any) => {
+    setCategoryToDelete(category)
+    setDeleteModal(true)
+  }
+
+  const handleCategoryDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteCategory(categoryToDelete)
+      toast.success("Berhasil menghapus kategori.")
+      const updatedCategories = categories.filter(item => (
+        item.id !== categoryToDelete.id
+      ))
+      setCategories(updatedCategories)
+    } catch {
+      toast.error('Gagal menghapus kategori.')
+    } finally {
+      setIsDeleting(false)
+      setDeleteModal(false)
+    }
   }
 
   return (
@@ -282,12 +337,11 @@ export default function ManualTransaction({
           </div>
 
           {/* Filter Category Dropdown */}
-          <div className={`relative min-w-[140px] ${isLoadingCategories && 'animate-pulse'}`}>
+          <div className={`relative min-w-[140px]`}>
             <Dropdown
-              disabled={isLoadingCategories}
               options={[
-                { value: 'ALL', label: isLoadingCategories ? 'Memuat Kategori...' : 'Semua Kategori' },
-                ...categories.map((cat) => ({ value: cat.id, label: isLoadingCategories ? 'Memuat Kategori...' : cat.name }))
+                { value: 'ALL', label: 'Semua Kategori' },
+                ...filteredCategories.map((cat) => ({ value: cat.id, label: cat.name }))
               ]}
               value={categoryFilter}
               onChange={setCategoryFilter}
@@ -298,11 +352,12 @@ export default function ManualTransaction({
           
           <button
           type="button"
+            disabled={isLoadingAddCategory}
             onClick={() => setIsAddCategoryModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-blue-600 border-2 border-blue-600 hover:bg-blue-600 hover:text-white active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
-            <Plus size={16} strokeWidth={2} />
-            <span>Tambah Kategori</span>
+            <Edit size={16} strokeWidth={2} />
+            <span>Atur Kategori</span>
           </button>
         </div>
       </div>
@@ -530,29 +585,13 @@ export default function ManualTransaction({
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                     Kategori
                   </label>
-                  {isLoadingCategories ? (
-                    <div className="h-10 flex items-center justify-center bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-400 animate-pulse">
-                      Memuat kategori...
-                    </div>
-                  ) : categoriesError ? (
-                    <div className="space-y-1">
-                      <span className="text-xs text-rose-500">{categoriesError}</span>
-                      <button
-                        type="button"
-                        onClick={fetchCategories}
-                        className="block text-xs text-blue-600 hover:underline cursor-pointer"
-                      >
-                        Coba lagi
-                      </button>
-                    </div>
-                  ) : (
-                    <Dropdown
-                      options={categories.map((cat) => ({ value: cat.name, label: cat.name }))}
-                      value={formCategory}
-                      onChange={setFormCategory}
-                      placeholder="Pilih Kategori"
-                    />
-                  )}
+                  
+                  <Dropdown
+                    options={categories.map((cat) => ({ value: cat.name, label: cat.name }))}
+                    value={formCategory}
+                    onChange={setFormCategory}
+                    placeholder="Pilih Kategori"
+                  />
                 </div>
 
                 {/* Payment Method Selector */}
@@ -615,7 +654,7 @@ export default function ManualTransaction({
           <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-slate-900">Tambah Kategori Transaksi Baru</h3>
+              <h3 className="text-lg font-bold text-slate-900">Atur Kategori Transaksi</h3>
               <button
                 onClick={() => setIsAddCategoryModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
@@ -639,7 +678,7 @@ export default function ManualTransaction({
                       type: 'INCOME'
                     }))}
                     className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                      formType === 'INCOME'
+                      newCategory.type === 'INCOME'
                         ? 'bg-white text-emerald-700 shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
@@ -653,7 +692,7 @@ export default function ManualTransaction({
                       type: 'EXPENSE'
                     }))}
                     className={`py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-                      formType === 'EXPENSE'
+                      newCategory.type === 'EXPENSE'
                         ? 'bg-white text-rose-700 shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
@@ -683,23 +722,59 @@ export default function ManualTransaction({
 
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 mt-6">
                 <button
-                  type="button"
-                  onClick={() => setIsAddCategoryModalOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
+                  disabled={isLoadingAddCategory}
                   type="submit"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-white bg-blue-600 disabled:bg-blue-300 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                 >
-                  Tambah Kategori
+                  {
+                  isLoadingAddCategory 
+                  ? (
+                    <>
+                      <Loading />
+                      Memuat...
+                    </>
+                  )
+                  :'Tambah Kategori' }
                 </button>
               </div>
             </form>
+
+            {/* List Kategori */}
+            <div className="border-t border-slate-100 p-6 bg-slate-50/50">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Daftar Kategori ({filteredAddCategories.length})
+              </h4>
+              {filteredAddCategories.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">Belum ada kategori yang terdaftar.</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {
+                    isLoadingCategories
+                    ? <p className="text-xs text-slate-400 italic">Memuat...</p>
+                    : filteredAddCategories.map((cat) => (
+                      <div
+                        key={cat.id}
+                        className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs"
+                      >
+                        <span className="text-sm font-semibold text-slate-800">{cat.name}</span>
+                        {
+                          (cat.name !== 'Kasir') && (
+                            <button onClick={() => showDeleteCategoryModal(cat)} className='text-red-500 hover:bg-red-200 cursor-pointer rounded-sm text-xs'>
+                              <Trash2 className='p-1'/>
+                            </button>
+                          )
+                        }
+                        
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      <DeleteCard isOpen={deleteModal} isLoading={isDeleting} onClose={() => setDeleteModal(false)} onConfirm={handleCategoryDelete} />
     </div>
   )
 }

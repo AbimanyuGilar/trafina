@@ -16,8 +16,8 @@ import {
 } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import DeleteCard from '@/components/deleteCard'
-import { redirect } from 'next/navigation'
 import NProgress from 'nprogress'
+import { useRouter } from 'next/navigation'
 
 export default function CompanyDetail({ companyData }: { companyData: any }) {
   const [activeTab, setActiveTab] = useState<'overview' | 'activity'>('overview')
@@ -25,20 +25,25 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
   const [showDeleteCard, setShowDeleteCard] = useState<boolean>(false)
 
   const [isDeleteting, setIsDeleteting] = useState(false)
+
+  const router = useRouter()
   
   async function handleDelete() {
     setShowDeleteCard(true)
   }
 
   async function deleteCompany(orgId: string) {
-    NProgress.start()
     setIsDeleteting(true)
     
     const { data, error } = await authClient.organization.delete({
       organizationId: orgId, // required
     });
 
-    redirect('/dashboard')
+    await authClient.organization.setActive({
+      organizationId: null,
+    });
+
+    window.location.href = '/dashboard/com'
   }
 
   return (

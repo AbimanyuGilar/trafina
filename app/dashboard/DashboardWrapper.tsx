@@ -81,6 +81,13 @@ export default async function DashboardWrapper({
           permission: "manage_cashier",
         },
         {
+          label: "Metode Transaksi", 
+          href: `/dashboard/com/${organization?.slug}/transaction-method`,
+          roles: ["USER"],
+          requiredOrganization: true,
+          permission: "manage_transaction_method",
+        },
+        {
           label: "Riwayat Transaksi", 
           href: `/dashboard/com/${organization?.slug}/transaction-history`,
           roles: ["USER"],
