@@ -26,12 +26,22 @@ const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: strin
     }
   })
 
-  const initialTransactions = await prisma.transaction.findMany({
+  const totalTransactions = await prisma.transaction.count({
     where: {
       organizationId: org?.id,
-      transactionCategory: {
-        not: 'Kasir'
-      }
+    }
+  })
+
+  const uniqueTransactionMethods = await prisma.transaction.findMany({
+    where: {
+      organizationId: org?.id,
+    },
+    distinct: ['paymentMethod'],
+    orderBy: {
+      createdAt: 'desc'
+    },
+    select: {
+      paymentMethod: true
     }
   })
 
@@ -43,7 +53,7 @@ const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: strin
 
   return (
     <>
-      <ManualTransaction user={session?.user} paymentMethods={paymentMethods} initialTransactionCategories={categories} initialTransactions={initialTransactions} organizationName={org?.name}/>
+      <ManualTransaction user={session?.user} paymentMethods={paymentMethods} initialTransactionCategories={categories} totalCount={totalTransactions} organizationName={org?.name}/>
     </>
   )
 }

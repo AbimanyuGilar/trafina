@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Search,
   ArrowUpRight,
@@ -16,7 +16,7 @@ import {
   Edit,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { addCategory, deleteCategory, addTransaction, deleteTransaction, getReceiptSignedUrl } from './actions'
+import { addCategory, deleteCategory, addTransaction, deleteTransaction, getReceiptSignedUrl, getTransactions } from './actions'
 import Dropdown from '@/components/Dropdown'
 import DeleteCard from '@/components/deleteCard'
 import Loading from '@/components/loading'
@@ -24,15 +24,17 @@ import { Transaction, TransactionCategory, PaymentMethod } from '@/generated/pri
 
 
 type PaymentMethodItem = Omit<PaymentMethod, 'createdAt' | 'updatedAt' | 'organizationId'>
+
 type TransactionItem = Omit<Transaction, 'createdAt' | 'updatedAt' | 'organizationId'> & {
   createdAt?: Date;
   updatedAt?: Date;
   organizationId?: string;
 };
+
 type TransactionCategoryItem = Omit<TransactionCategory, 'createdAt' | 'updatedAt' | 'organizationId'>
 
 interface ManualTransactionProps {
-  initialTransactions: TransactionItem[]
+  totalCount: number
   organizationName?: string
   user: any
   initialTransactionCategories: TransactionCategory[]
@@ -40,15 +42,96 @@ interface ManualTransactionProps {
 }
 
 export default function ManualTransaction({
-  initialTransactions,
+  totalCount: initialTotalCount,
   user,
   initialTransactionCategories,
   paymentMethods
 }: ManualTransactionProps) {
-  const [transactions, setTransactions] = useState<TransactionItem[]>(initialTransactions)
+  const [transactions, setTransactions] = useState<TransactionItem[]>([])
+  const [totalCount, setTotalCount] = useState(initialTotalCount)
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false)
+  const [page, setPage] = useState(1)
+
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery)
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 500)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [searchQuery])
+
+  const prevFiltersRef = useRef({ typeFilter, categoryFilter, debouncedSearchQuery })
+  const isResettingPageRef = useRef(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchFilteredTransactions = async () => {
+      const prev = prevFiltersRef.current
+      const filtersChanged = (
+        prev.typeFilter !== typeFilter ||
+        prev.categoryFilter !== categoryFilter ||
+        prev.debouncedSearchQuery !== debouncedSearchQuery
+      )
+
+      if (filtersChanged) {
+        prevFiltersRef.current = { typeFilter, categoryFilter, debouncedSearchQuery }
+        if (page !== 1) {
+          isResettingPageRef.current = true
+          setPage(1)
+          return
+        }
+      }
+
+      if (isResettingPageRef.current) {
+        isResettingPageRef.current = false
+      }
+
+      setIsLoadingTransactions(true)
+      const type = typeFilter === 'ALL' ? undefined : (typeFilter as 'INCOME' | 'EXPENSE')
+      const search = debouncedSearchQuery.trim() || undefined
+
+      try {
+        const result = await getTransactions({
+          page,
+          pageSize: 5,
+          type,
+          search
+        })
+
+        if (isMounted && result.success && result.data) {
+          let data = result.data
+          if (categoryFilter !== 'ALL') {
+            data = data.filter(item => item.transactionCategory === categoryFilter)
+          }
+          setTransactions(data)
+        }
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (isMounted) {
+          setIsLoadingTransactions(false)
+        }
+      }
+    }
+
+    fetchFilteredTransactions()
+
+    return () => {
+      isMounted = false
+    }
+  }, [page, debouncedSearchQuery, typeFilter, categoryFilter])
+
+  useEffect(() => {
+    setTotalCount(initialTotalCount)
+  }, [initialTotalCount])
 
   const [categoryToDelete, setCategoryToDelete] = useState<TransactionCategoryItem>({id: '', name: '', type: 'INCOME'})
   
@@ -174,6 +257,7 @@ export default function ManualTransaction({
     if (result.success && result.data) {
       toast.success('Berhasil membuat transaksi.')
       setTransactions([result.data, ...transactions])
+      setTotalCount(prev => prev + 1)
     } else {
       toast.error(result.message)
     }
@@ -188,19 +272,9 @@ export default function ManualTransaction({
     setFormType('INCOME')
   }
 
-  // Filter transaksi berdasarkan pencarian, tipe, dan kategori
-  const filteredTransactions = transactions.filter((item) => {
-    const matchesSearch =
-      item.detail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesType = typeFilter === 'ALL' || item.transactionType === typeFilter
-    const matchesCategory =
-      categoryFilter === 'ALL' || item.transactionCategory === categoryFilter
-
-    return matchesSearch && matchesType && matchesCategory
-  })
+  // Transaksi yang ditampilkan langsung menggunakan data terupdate dari state transactions
+  const filteredTransactions = transactions
+  const totalPages = Math.max(1, Math.ceil(totalCount / 5))
 
   const filteredCategories = categories.filter((item, index, self) => {
     const matchesType = typeFilter === 'ALL' || item.type === typeFilter
@@ -279,6 +353,7 @@ export default function ManualTransaction({
       if (result.success) {
         toast.success("Berhasil membatalkan transaksi.")
         setTransactions(prev => prev.filter(item => item.id !== transactionToDelete.id))
+        setTotalCount(prev => prev - 1)
       } else {
         toast.error(result.message || 'Gagal membatalkan transaksi.')
       }
@@ -405,7 +480,12 @@ export default function ManualTransaction({
 
       {/* 4. Table Transaction List */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
-        {filteredTransactions.length === 0 ? (
+        {isLoadingTransactions ? (
+          <div className="p-12 text-center flex flex-col items-center justify-center gap-2">
+            <Loading size={24} />
+            <span className="text-sm text-slate-500">Memuat data transaksi...</span>
+          </div>
+        ) : filteredTransactions.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
               <Receipt size={24} />
@@ -543,10 +623,33 @@ export default function ManualTransaction({
       </div>
 
       {/* Total Count Footnote */}
-      <div className="text-xs text-slate-500 px-1 flex items-center justify-between">
+      <div className="text-xs text-slate-500 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <span>
-          Menampilkan <span className="font-semibold text-slate-700">{filteredTransactions.length}</span> dari <span className="font-semibold text-slate-700">{transactions.length}</span> transaksi
+          Menampilkan <span className="font-semibold text-slate-700">{filteredTransactions.length}</span> dari <span className="font-semibold text-slate-700">{totalCount}</span> transaksi
         </span>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <button
+            type="button"
+            disabled={page === 1 || isLoadingTransactions}
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 rounded-lg shadow-xs transition-all cursor-pointer"
+          >
+            Sebelumnya
+          </button>
+          <span className="text-xs text-slate-600 font-medium px-1">
+            Halaman {page} dari {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages || isLoadingTransactions}
+            onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 rounded-lg shadow-xs transition-all cursor-pointer"
+          >
+            Selanjutnya
+          </button>
+        </div>
       </div>
 
       {/* Modal Tambah Transaksi */}

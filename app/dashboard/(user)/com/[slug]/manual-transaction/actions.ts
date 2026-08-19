@@ -71,6 +71,68 @@ export async function deleteCategory(category: any) {
   }
 }
 
+type TransactionFilterType = {
+  page: number,
+  pageSize: number,
+  type?: TransactionType,
+  search?: string
+}
+
+export async function getTransactions({
+  page,
+  pageSize,
+  type,
+  search
+}: TransactionFilterType = {
+  page: 1,
+  pageSize: 5
+}) {
+  const org = await getFullOrganization()
+  if (!org) {
+    return {
+      success: false,
+      message: 'Gagal memuat transaksi.'
+    }
+  }
+
+  const skip = (page - 1 ) * pageSize
+
+  try {
+    const transactions = await prisma.transaction.findMany({
+      skip,
+      take: pageSize,
+      where: {
+        organizationId: org?.id,
+
+        ...(type && {
+          transactionType: type
+        }),
+
+        ...(search && {
+          OR: [
+            { detail: { contains: search, mode: 'insensitive' } },
+            { paymentMethod: { contains: search, mode: 'insensitive' } }
+          ]
+        })
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    return {
+      success: true,
+      data: transactions
+    }
+
+  } catch {
+    return {
+      success: false,
+      message: 'Gagal memuat transaksi.'
+    }
+  }
+}
+
 export async function addTransaction(formData: FormData) {
   const org = await getFullOrganization()
 
@@ -80,7 +142,6 @@ export async function addTransaction(formData: FormData) {
       message: 'Gagal membuat transaksi.'
     }
   }
-
   
   const receiptFile = formData.get('receipt') as File
 
@@ -167,7 +228,6 @@ export async function deleteTransaction(transaction: Omit<Transaction, 'createdA
     }
   }
 }
-
 
 export async function getReceiptSignedUrl(filePath: string) {
   if (!filePath) {
