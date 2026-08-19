@@ -142,9 +142,9 @@ enum TransactionType {
 
 model Transaction {
   id String @id @default(cuid())
-  totalPrice BigInt
+  totalPrice Int
   detail String
-  receipt String
+  receipt String?
   paymentMethod String
   transactionCategory String
   transactionType TransactionType

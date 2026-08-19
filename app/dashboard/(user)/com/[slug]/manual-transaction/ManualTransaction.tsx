@@ -16,90 +16,88 @@ import {
   Edit,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getCategories, addCategory, deleteCategory } from './actions'
+import { addCategory, deleteCategory, addTransaction, deleteTransaction, getReceiptSignedUrl } from './actions'
 import Dropdown from '@/components/Dropdown'
 import DeleteCard from '@/components/deleteCard'
 import Loading from '@/components/loading'
+import { Transaction, TransactionCategory, PaymentMethod } from '@/generated/prisma/client'
 
-export interface TransactionItem {
-  id: string
-  paymentMethodId: string
-  totalPrice: bigint | number
-  detail: string
-  receipt: string
-  paymentMethod: string
-  transactionCategory: string
-  transactionType: string
-  organizationId: string
-  createdAt: Date | string
-  updatedAt?: Date | string
-}
 
-export interface TransactionCategory {
-  id: string
-  name: string
-  type?: 'INCOME' | 'EXPENSE' | string
-  organizationId?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
+type PaymentMethodItem = Omit<PaymentMethod, 'createdAt' | 'updatedAt' | 'organizationId'>
+type TransactionItem = Omit<Transaction, 'createdAt' | 'updatedAt' | 'organizationId'> & {
+  createdAt?: Date;
+  updatedAt?: Date;
+  organizationId?: string;
+};
+type TransactionCategoryItem = Omit<TransactionCategory, 'createdAt' | 'updatedAt' | 'organizationId'>
 
 interface ManualTransactionProps {
   initialTransactions: TransactionItem[]
   organizationName?: string
   user: any
   initialTransactionCategories: TransactionCategory[]
+  paymentMethods: PaymentMethodItem[]
 }
 
 export default function ManualTransaction({
   initialTransactions,
   user,
-  initialTransactionCategories
+  initialTransactionCategories,
+  paymentMethods
 }: ManualTransactionProps) {
   const [transactions, setTransactions] = useState<TransactionItem[]>(initialTransactions)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
 
-  const [categoryToDelete, setCategoryToDelete] = useState<TransactionCategory>({id: '', name: ''})
+  const [categoryToDelete, setCategoryToDelete] = useState<TransactionCategoryItem>({id: '', name: '', type: 'INCOME'})
   
-  // Add Transaction Modal State
+  const [transactionToDelete, setTransactionToDelete] = useState<TransactionItem | null>(null)
+  const [deleteTransactionModal, setDeleteTransactionModal] = useState(false)
+  const [isDeletingTransaction, setIsDeletingTransaction] = useState(false)
+  
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false)
+
+  const handleViewReceipt = async (filePath: string) => {
+    setSelectedReceipt(filePath)
+    setIsLoadingReceipt(true)
+    setReceiptUrl(null)
+    try {
+      const result = await getReceiptSignedUrl(filePath)
+      if (result.success && result.url) {
+        setReceiptUrl(result.url)
+      } else {
+        toast.error(result.message || 'Gagal memuat struk')
+        setSelectedReceipt(null)
+      }
+    } catch {
+      toast.error('Gagal memuat struk')
+      setSelectedReceipt(null)
+    } finally {
+      setIsLoadingReceipt(false)
+    }
+  }
+  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
-  // Add Category Modal State
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false)
 
   const [categories, setCategories] = useState<TransactionCategory[]>(initialTransactionCategories)
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
-  const [categoriesError, setCategoriesError] = useState<string | null>(null)
 
   const [isLoadingAddCategory, setIsLoadingAddCategory] = useState(false)
 
-  // Form State
   const [formType, setFormType] = useState<'INCOME' | 'EXPENSE'>('INCOME')
   const [formDetail, setFormDetail] = useState('')
   const [formPrice, setFormPrice] = useState('')
   const [formCategory, setFormCategory] = useState('')
   const [formPaymentMethod, setFormPaymentMethod] = useState('')
-  const [formReceipt, setFormReceipt] = useState('')
+  const [formReceipt, setFormReceipt] = useState<File | null>(null)
   const [newCategory, setNewCategory] = useState<{ name: string, type: 'INCOME' | 'EXPENSE' }>({ name: '', type: 'INCOME' })
 
   const [deleteModal, setDeleteModal] = useState(false)
-
-  const fetchCategories = async () => {
-    setIsLoadingCategories(true)
-    setCategoriesError(null)
-    try {
-      const data = await getCategories()
-      setCategories(data || [])
-      console.log(data)
-    } catch (err: any) {
-      console.error('Error fetching categories:', err)
-      setCategoriesError(err.message || 'Gagal memuat kategori')
-    } finally {
-      setIsLoadingCategories(false)
-    }
-  }
 
   const handleSubmitCategory = async (e: React.SubmitEvent) => {
     setIsLoadingAddCategory(true)
@@ -127,7 +125,8 @@ export default function ManualTransaction({
     setIsLoadingAddCategory(false)
   }
 
-  const handleSubmitTransaction = (e: React.SubmitEvent) => {
+  const [isAddingTransaction, setIsAddingTransaction] = useState(false)
+  const handleSubmitTransaction = async (e: React.SubmitEvent) => {
     e.preventDefault()
 
     if (!formDetail.trim()) {
@@ -146,37 +145,46 @@ export default function ManualTransaction({
       toast.error('Metode pembayaran harus dipilih')
       return
     }
-
-    const paymentMethodIds: Record<string, string> = {
-      'QRIS': 'pm_qris_local',
-      'Transfer Bank - BCA': 'pm_bank_transfer_local',
-      'Tunai': 'pm_cash_local',
-      'Kartu Kredit': 'pm_credit_card_local'
+    if (formReceipt && formReceipt.size > 5 * 1024 * 1024) { // 5 MB
+      toast.error('Ukuran file struk maksimal 5 MB!')
+      return
     }
 
-    const newTransaction: TransactionItem = {
-      id: `tx_local_${Date.now()}`,
-      paymentMethodId: paymentMethodIds[formPaymentMethod] || 'pm_custom_local',
-      totalPrice: Number(formPrice),
+    setIsAddingTransaction(true)
+
+    const formData = new FormData()
+
+    const newTransaction = {
+      totalPrice: formPrice,
       detail: formDetail,
       receipt: formReceipt,
       paymentMethod: formPaymentMethod,
       transactionCategory: formCategory,
       transactionType: formType,
-      organizationId: 'local_org',
-      createdAt: new Date(),
     }
 
-    setTransactions([newTransaction, ...transactions])
-    toast.success('Transaksi berhasil ditambahkan!')
-    setIsAddModalOpen(false)
+    Object.entries(newTransaction).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        formData.append(key, value)
+      }
+    })
 
-    // Reset Form
+    const result = await addTransaction(formData)
+
+    if (result.success && result.data) {
+      toast.success('Berhasil membuat transaksi.')
+      setTransactions([result.data, ...transactions])
+    } else {
+      toast.error(result.message)
+    }
+
+    setIsAddingTransaction(false)
+    setIsAddModalOpen(false)
     setFormDetail('')
     setFormPrice('')
     setFormCategory('')
     setFormPaymentMethod('')
-    setFormReceipt('')
+    setFormReceipt(null)
     setFormType('INCOME')
   }
 
@@ -194,10 +202,11 @@ export default function ManualTransaction({
     return matchesSearch && matchesType && matchesCategory
   })
 
-  const filteredCategories = categories.filter(item => {
+  const filteredCategories = categories.filter((item, index, self) => {
     const matchesType = typeFilter === 'ALL' || item.type === typeFilter
+    const isFirst = self.findIndex(c => c.name === item.name) === index
 
-    return matchesType
+    return matchesType && isFirst
   })
 
   const filteredAddCategories = categories.filter(item => {
@@ -205,6 +214,13 @@ export default function ManualTransaction({
 
     return matchesType
   })
+
+  const filteredAddTransactionCategories = categories.filter(item => {
+    const matchesType = item.type === formType
+
+    return matchesType
+  })
+
 
   // Helper Format Rupiah
   const formatRupiah = (amount: number | bigint) => {
@@ -228,7 +244,7 @@ export default function ManualTransaction({
   }
 
   const [isDeleting, setIsDeleting] = useState(false)
-  const showDeleteCategoryModal = (category: any) => {
+  const showDeleteCategoryModal = (category: TransactionCategoryItem) => {
     setCategoryToDelete(category)
     setDeleteModal(true)
   }
@@ -247,6 +263,31 @@ export default function ManualTransaction({
     } finally {
       setIsDeleting(false)
       setDeleteModal(false)
+    }
+  }
+
+  const showDeleteTransactionModal = (transaction: TransactionItem) => {
+    setTransactionToDelete(transaction)
+    setDeleteTransactionModal(true)
+  }
+
+  const handleTransactionDelete = async () => {
+    if (!transactionToDelete) return
+    setIsDeletingTransaction(true)
+    try {
+      const result = await deleteTransaction(transactionToDelete as any)
+      if (result.success) {
+        toast.success("Berhasil membatalkan transaksi.")
+        setTransactions(prev => prev.filter(item => item.id !== transactionToDelete.id))
+      } else {
+        toast.error(result.message || 'Gagal membatalkan transaksi.')
+      }
+    } catch {
+      toast.error('Gagal membatalkan transaksi.')
+    } finally {
+      setIsDeletingTransaction(false)
+      setDeleteTransactionModal(false)
+      setTransactionToDelete(null)
     }
   }
 
@@ -337,11 +378,11 @@ export default function ManualTransaction({
           </div>
 
           {/* Filter Category Dropdown */}
-          <div className={`relative min-w-[140px]`}>
+          <div className={`relative min-w-35`}>
             <Dropdown
               options={[
                 { value: 'ALL', label: 'Semua Kategori' },
-                ...filteredCategories.map((cat) => ({ value: cat.id, label: cat.name }))
+                ...filteredCategories.map((cat) => ({ value: cat.name, key: cat.id, label: cat.name }))
               ]}
               value={categoryFilter}
               onChange={setCategoryFilter}
@@ -396,6 +437,9 @@ export default function ManualTransaction({
                   <th scope="col" className="px-6 py-3.5 text-center">
                     Struk
                   </th>
+                  <th scope="col" className="px-6 py-3.5 text-center">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -429,7 +473,7 @@ export default function ManualTransaction({
                             </span>
                             <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
                               <Calendar size={13} />
-                              <span>{formatDate(item.createdAt)}</span>
+                              <span>{formatDate(item.createdAt as Date)}</span>
                             </div>
                           </div>
                         </div>
@@ -464,20 +508,30 @@ export default function ManualTransaction({
                       {/* Link Struk (Receipt) */}
                       <td className="px-6 py-4 text-center">
                         {item.receipt ? (
-                          <a
-                            href={item.receipt}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg transition-colors"
+                          <button
+                            type="button"
+                            onClick={() => handleViewReceipt(item.receipt!)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg transition-colors cursor-pointer"
                           >
                             <FileText size={13} />
                             <span>Lihat</span>
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-xs text-slate-400 italic">
                             -
                           </span>
                         )}
+                      </td>
+
+                      {/* Aksi (Delete) */}
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => showDeleteTransactionModal(item)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer animate-none"
+                          title="Batalkan Transaksi"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </td>
                     </tr>
                   )
@@ -587,7 +641,7 @@ export default function ManualTransaction({
                   </label>
                   
                   <Dropdown
-                    options={categories.map((cat) => ({ value: cat.name, label: cat.name }))}
+                    options={filteredAddTransactionCategories.map((cat) => ({ value: cat.name, label: cat.name, key: cat.id }))}
                     value={formCategory}
                     onChange={setFormCategory}
                     placeholder="Pilih Kategori"
@@ -600,12 +654,11 @@ export default function ManualTransaction({
                     Metode Pembayaran
                   </label>
                   <Dropdown
-                    options={[
-                      { value: 'QRIS', label: 'QRIS' },
-                      { value: 'Transfer Bank - BCA', label: 'Transfer Bank - BCA' },
-                      { value: 'Tunai', label: 'Tunai' },
-                      { value: 'Kartu Kredit', label: 'Kartu Kredit' }
-                    ]}
+                    options={paymentMethods.map(item => ({
+                      value: item.name,
+                      label: item.name,
+                      key: item.id
+                    }))}
                     value={formPaymentMethod}
                     onChange={setFormPaymentMethod}
                     placeholder="Pilih Metode"
@@ -619,10 +672,8 @@ export default function ManualTransaction({
                   Link Struk / Lampiran (Opsional)
                 </label>
                 <input
-                  type="url"
-                  value={formReceipt}
-                  onChange={(e) => setFormReceipt(e.target.value)}
-                  placeholder="https://example.com/receipt.jpg"
+                  type="file"
+                  onChange={(e) => setFormReceipt(e.target.files?.[0] || null)}
                   className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 />
               </div>
@@ -637,10 +688,18 @@ export default function ManualTransaction({
                   Batal
                 </button>
                 <button
+                  disabled={isAddingTransaction}
                   type="submit"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="disabled:bg-blue-200 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                 >
-                  Simpan Transaksi
+                  {
+                    isAddingTransaction
+                    ? <div className='flex items-center gap-2'>
+                      <Loading size={16} />
+                      Menyimpan...
+                    </div>
+                    : 'Simpan Transaksi'
+                  }
                 </button>
               </div>
             </form>
@@ -775,6 +834,71 @@ export default function ManualTransaction({
       )}
 
       <DeleteCard isOpen={deleteModal} isLoading={isDeleting} onClose={() => setDeleteModal(false)} onConfirm={handleCategoryDelete} />
+      <DeleteCard
+        isOpen={deleteTransactionModal}
+        isLoading={isDeletingTransaction}
+        onClose={() => setDeleteTransactionModal(false)}
+        onConfirm={handleTransactionDelete}
+        title="Batalkan Transaksi"
+        description="Apakah Anda yakin ingin membatalkan transaksi ini? Tindakan ini akan menghapus data transaksi secara permanen."
+        itemName={transactionToDelete ? `${transactionToDelete.detail} (${formatRupiah(transactionToDelete.totalPrice)})` : undefined}
+      />
+
+      {/* Modal View Receipt */}
+      {selectedReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          {/* Modal Container */}
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Gambar Struk</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedReceipt(null)
+                  setReceiptUrl(null)
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 flex flex-col items-center justify-center min-h-64 max-h-[70vh] overflow-y-auto bg-slate-50">
+              {isLoadingReceipt ? (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loading size={24} />
+                  <span className="text-sm text-slate-500">Memuat gambar struk...</span>
+                </div>
+              ) : receiptUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={receiptUrl}
+                  alt="Struk Transaksi"
+                  className="max-w-full max-h-[60vh] object-contain rounded-lg border border-slate-200 shadow-sm"
+                />
+              ) : (
+                <span className="text-sm text-slate-500">Gagal memuat gambar struk</span>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-white">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedReceipt(null)
+                  setReceiptUrl(null)
+                }}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

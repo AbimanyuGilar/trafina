@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 export interface DropdownOption {
   value: string
   label: string
+  key?: string
 }
 
 interface DropdownProps {
@@ -90,7 +91,7 @@ export default function Dropdown({
               const isSelected = option.value === value
               return (
                 <button
-                  key={option.value}
+                  key={option.key ? option.key : option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={cn(

@@ -12,6 +12,7 @@
     "@base-ui/react": "^1.7.0",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",
+    "@supabase/supabase-js": "^2.112.3",
     "@vercel/functions": "^3.7.6",
     "better-auth": "^1.6.25",
     "class-variance-authority": "^0.7.1",
