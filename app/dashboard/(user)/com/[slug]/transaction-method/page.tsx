@@ -3,7 +3,6 @@ import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import TransactionMethodList from './TransactionMethodList'
-import prisma from '@/lib/prisma'
 
 const TransactionMethodPage = async ({
   params,
@@ -14,7 +13,6 @@ const TransactionMethodPage = async ({
 
   const { session } = await requirePermission('manage_transaction_method', slug)
 
-  // 2. Ambil data organisasi dari server
   const companyData = await auth.api.getFullOrganization({
     headers: await headers(),
     query: { organizationSlug: slug },
@@ -23,12 +21,6 @@ const TransactionMethodPage = async ({
   if (!companyData) {
     redirect('/dashboard')
   }
-
-  const transactionMethods = await prisma.paymentMethod.findMany({
-    where: {
-      organizationId: companyData.id
-    }
-  })
 
   return (
     <div className="w-full space-y-6">
@@ -44,8 +36,7 @@ const TransactionMethodPage = async ({
         </div>
       </div>
 
-      {/* CRUD List Component */}
-      <TransactionMethodList initialTransactionMethods={transactionMethods} />
+      <TransactionMethodList />
     </div>
   )
 }

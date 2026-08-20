@@ -3,6 +3,65 @@
 import prisma from "@/lib/prisma"
 import { requireOrganization } from "@/lib/auth-guard"
 
+interface TransactionMethodsFilterType {
+  page: number
+  pageSize: number
+  search?: string
+}
+export async function getTransactionMethods({ pageSize, page, search }: TransactionMethodsFilterType = {
+  pageSize: 5, page: 1
+}) {
+  const org = await requireOrganization()
+
+  try {
+    const data = await prisma.paymentMethod.findMany({
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      where: {
+        organizationId: org.id,
+        ...(search && {
+          name: { contains: search, mode: 'insensitive' }
+        }),
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    return {
+      success: true,
+      data
+    }
+  } catch {
+    return {
+      success: false,
+      message: 'Gagal memuat metode transaksi.'
+    }
+  }
+}
+
+export async function getMethodsCount() {
+  const org = await requireOrganization()
+
+  try {
+    const data = await prisma.paymentMethod.count({
+      where: {
+        organizationId: org.id
+      }
+    })
+
+    return {
+      success: true,
+      data
+    }
+  } catch {
+    return {
+      success: false,
+      message: 'Gagal memuat total metode transaksi.'
+    }
+  }
+}
+
 export async function addTransactionMethod(newMethod: string) {
   if (newMethod.toLowerCase() === 'tunai' || newMethod.toLowerCase() === 'qris') {
     return {

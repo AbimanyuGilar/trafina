@@ -67,18 +67,18 @@ export default async function DashboardWrapper({
       permission: "manage_transactions",
       children: [
         {
-          label: "Transaksi Manual", 
-          href: `/dashboard/com/${organization?.slug}/manual-transaction`,
-          roles: ["USER"],
-          requiredOrganization: true,
-          permission: "manage_manual_transaction",
-        },
-        {
           label: "Kasir", 
           href: `/dashboard/com/${organization?.slug}/cashier`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_cashier",
+        },
+        {
+          label: "Transaksi Manual", 
+          href: `/dashboard/com/${organization?.slug}/manual-transaction`,
+          roles: ["USER"],
+          requiredOrganization: true,
+          permission: "manage_manual_transaction",
         },
         {
           label: "Metode Transaksi", 

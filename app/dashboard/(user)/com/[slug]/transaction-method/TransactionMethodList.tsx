@@ -1,17 +1,23 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Search,
   Plus,
-  Pencil,
+  Edit,
   Trash2,
   X,
   Loader2
 } from 'lucide-react'
 import DeleteCard from '@/components/deleteCard'
 import { toast } from 'sonner'
-import { addTransactionMethod, deleteTransactionMethod, updateTransactionMethod } from './actions'
+import {
+  addTransactionMethod,
+  deleteTransactionMethod,
+  updateTransactionMethod,
+  getTransactionMethods,
+  getMethodsCount
+} from './actions'
 
 export interface TransactionMethodItem {
   id: string
@@ -20,9 +26,11 @@ export interface TransactionMethodItem {
   updatedAt?: Date | string
 }
 
-export default function TransactionMethodList({ initialTransactionMethods }: {initialTransactionMethods: TransactionMethodItem[]}) {
-  const [methods, setMethods] = useState<TransactionMethodItem[]>(initialTransactionMethods)
+export default function TransactionMethodList() {
+  const [methods, setMethods] = useState<TransactionMethodItem[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false)
@@ -30,16 +38,85 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
   const [selectedDeleteItem, setSelectedDeleteItem] = useState<TransactionMethodItem | null>(null)
 
   // Loading states
+  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   // Form state
   const [formName, setFormName] = useState('')
 
-  // Filter pencarian
-  const filteredMethods = methods.filter((method) =>
-    method.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Pagination state
+  const [page, setPage] = useState(1)
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Fetch data function
+  const fetchData = useCallback(async (currentPage: number, searchVal: string) => {
+    setIsLoading(true)
+    try {
+      const methodsRes = await getTransactionMethods({
+        page: currentPage,
+        pageSize: 5,
+        search: searchVal ? searchVal.trim() : undefined,
+      })
+
+      if (methodsRes.success && methodsRes.data) {
+        setMethods(methodsRes.data as TransactionMethodItem[])
+      } else {
+        toast.error(methodsRes.message || 'Gagal memuat metode transaksi')
+      }
+    } catch {
+      toast.error('Terjadi kesalahan saat memuat data')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // Fetch initial total count on mount only
+  useEffect(() => {
+    const fetchInitialCount = async () => {
+      try {
+        const countRes = await getMethodsCount()
+        if (countRes.success && countRes.data !== undefined) {
+          setTotalCount(countRes.data)
+        } else {
+          toast.error(countRes.message || 'Gagal memuat total metode transaksi')
+        }
+      } catch {
+        toast.error('Terjadi kesalahan saat memuat total metode transaksi')
+      }
+    }
+    fetchInitialCount()
+  }, [])
+
+  const prevFiltersRef = useRef({ debouncedSearchQuery })
+  const isResettingPageRef = useRef(false)
+
+  useEffect(() => {
+    const prev = prevFiltersRef.current
+    const filtersChanged = prev.debouncedSearchQuery !== debouncedSearchQuery
+
+    if (filtersChanged) {
+      prevFiltersRef.current = { debouncedSearchQuery }
+      if (page !== 1) {
+        isResettingPageRef.current = true
+        setPage(1)
+        return
+      }
+    }
+
+    if (isResettingPageRef.current) {
+      isResettingPageRef.current = false
+    }
+
+    fetchData(page, debouncedSearchQuery)
+  }, [page, debouncedSearchQuery, fetchData])
 
   // Buka Modal Tambah
   const handleOpenAdd = () => {
@@ -66,16 +143,17 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
 
     if (newMethod?.success) {
       toast.success(`Metode "${newMethod?.data?.name}" berhasil ditambahkan`)
-      setMethods((prev) => [
-        ...prev,
-        newMethod?.data as TransactionMethodItem,
-      ])
+      setTotalCount((prev) => prev + 1)
+      if (page !== 1) {
+        setPage(1)
+      } else {
+        fetchData(1, debouncedSearchQuery)
+      }
     } else {
       toast.error(newMethod?.message)
     }
 
     setIsAddOpen(false)
-    
     setIsSubmitting(false)
   }
 
@@ -90,18 +168,16 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
 
     setIsSubmitting(true)
 
-    const updated = await updateTransactionMethod({newName: selectedEditItem.name, methodId: selectedEditItem.id})
-    
-    setMethods((prev) =>
-      prev.map((item) =>
-        item.id === selectedEditItem.id
-          ? { ...item, name: formName.trim() }
-          : item
-      )
-    )
-    
+    const updated = await updateTransactionMethod({ newName: formName.trim(), methodId: selectedEditItem.id })
+
+    if (updated.success) {
+      toast.success(`Metode berhasil diperbarui menjadi "${formName}"`)
+      fetchData(page, debouncedSearchQuery)
+    } else {
+      toast.error(updated.message || 'Gagal memperbarui metode')
+    }
+
     setSelectedEditItem(null)
-    toast.success(`Metode berhasil diperbarui menjadi "${formName}"`)
     setIsSubmitting(false)
   }
 
@@ -112,8 +188,13 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
     const deleted = await deleteTransactionMethod(selectedDeleteItem)
 
     if (deleted.success) {
-      setMethods((prev) => prev.filter((item) => item.id !== selectedDeleteItem.id))
       toast.success(`Metode "${selectedDeleteItem.name}" berhasil dihapus`)
+      setTotalCount((prev) => Math.max(0, prev - 1))
+      if (methods.length === 1 && page > 1) {
+        setPage((prev) => prev - 1)
+      } else {
+        fetchData(page, debouncedSearchQuery)
+      }
     } else {
       toast.error(deleted.message)
     }
@@ -121,6 +202,8 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
     setSelectedDeleteItem(null)
     setIsDeleting(false)
   }
+
+  const totalPages = Math.max(1, Math.ceil((totalCount - 2) / 5))
 
   return (
     <div className="space-y-4">
@@ -149,7 +232,12 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
 
       {/* Tabel Sederhana */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-        {filteredMethods.length === 0 ? (
+        {isLoading ? (
+          <div className="p-8 text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+            <span>Memuat data...</span>
+          </div>
+        ) : methods.length === 0 ? (
           <div className="p-8 text-center text-sm text-slate-500">
             Metode transaksi tidak ditemukan.
           </div>
@@ -163,7 +251,7 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredMethods.map((method) => (
+                {methods.map((method) => (
                   <tr key={method.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-6 py-4 font-medium text-slate-900">{method.name}</td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
@@ -176,7 +264,7 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
                               className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                               title="Ubah Nama"
                             >
-                              <Pencil size={15} />
+                              <Edit className='text-blue-500' size={15} />
                             </button>
                             <button
                               type="button"
@@ -184,7 +272,7 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
                               className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                               title="Hapus"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 className='text-red-500' size={15} />
                             </button>
                           </div>
                         )
@@ -199,10 +287,44 @@ export default function TransactionMethodList({ initialTransactionMethods }: {in
         )}
       </div>
 
-      {/* Footer Info */}
-      <div className="text-xs text-slate-500 px-1">
-        Menampilkan <span className="font-semibold text-slate-700">{filteredMethods.length}</span> dari{' '}
-        <span className="font-semibold text-slate-700">{methods.length}</span> metode
+      {/* Footer Info & Pagination */}
+      <div className="text-xs text-slate-500 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <span>
+          Menampilkan <span className="font-semibold text-slate-700">{methods.length}</span> dari{' '}
+          <span className="font-semibold text-slate-700">{totalCount}</span> data
+        </span>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <button
+            type="button"
+            disabled={page === 1 || isLoading}
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 rounded-lg shadow-xs transition-all cursor-pointer"
+          >
+            Sebelumnya
+          </button>
+          {debouncedSearchQuery ? (
+            <span className="text-xs text-slate-600 font-medium px-1">
+              Halaman {page}
+            </span>
+          ) : (
+            <span className="text-xs text-slate-600 font-medium px-1">
+              Halaman {page} dari {totalPages}
+            </span>
+          )}
+          <button
+            type="button"
+            disabled={
+              isLoading ||
+              (debouncedSearchQuery ? methods.length < 5 : page >= totalPages)
+            }
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-200 rounded-lg shadow-xs transition-all cursor-pointer"
+          >
+            Selanjutnya
+          </button>
+        </div>
       </div>
 
       {/* Modal Tambah */}
