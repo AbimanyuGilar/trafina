@@ -203,7 +203,7 @@ export default function TransactionMethodList() {
     setIsDeleting(false)
   }
 
-  const totalPages = Math.max(1, Math.ceil((totalCount - 2) / 5))
+  const totalPages = Math.max(1, Math.ceil(totalCount / 5))
 
   return (
     <div className="space-y-4">

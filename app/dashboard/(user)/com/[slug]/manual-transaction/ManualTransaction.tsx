@@ -379,14 +379,6 @@ export default function ManualTransaction({
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
-            className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
-          >
-            <Download size={16} strokeWidth={2} />
-            <span>Export Data</span>
-          </button>
-
-          <button
-            type="button"
             onClick={() => setIsAddModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
