@@ -55,32 +55,7 @@ const StaffPage = async ({
   }) || []
 
   // 5. Ambil semua permissions yang tersedia di database
-  let allPermissions = await prisma.permission.findMany()
-
-  const defaults = [
-    'manage_inventory',
-    'manage_transactions',
-    'manage_staff',
-    'manage_manual_transaction',
-    'manage_cashier',
-    'manage_transaction_history'
-  ]
-
-  // Pastikan semua default permission ada di database
-  let needRefresh = false
-  for (const name of defaults) {
-    const exists = allPermissions.some((p) => p.name === name)
-    if (!exists) {
-      await prisma.permission.create({
-        data: { name },
-      })
-      needRefresh = true
-    }
-  }
-
-  if (needRefresh) {
-    allPermissions = await prisma.permission.findMany()
-  }
+  const allPermissions = await prisma.permission.findMany()
 
   return (
     <div className="w-full space-y-6">

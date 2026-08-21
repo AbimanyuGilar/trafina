@@ -28,10 +28,12 @@ export interface StaffItem {
 const PERMISSION_LABELS: Record<string, string> = {
   manage_products: 'Produk',
   manage_transactions: 'Transaksi',
-  manage_staffs: 'Karyawan',
+  manage_staff: 'Karyawan',
   manage_manual_transaction: 'Transaksi Manual',
   manage_cashier: 'Kasir',
   manage_transaction_history: 'Riwayat Transaksi',
+  manage_transaction_method: 'Metode Transaksi',
+
 }
 
 interface StaffListProps {
