@@ -19,6 +19,28 @@ export async function requireRoles(requiredRoles: string[]) {
   return session
 }
 
+export async function checkOrganization(organizationId: string) {
+  const org = await auth.api.getFullOrganization({
+    headers: await headers()
+  })
+
+  if (!org) redirect('/dashboard/com')
+
+  if (org.id !== organizationId) redirect('/dashboard/com')
+
+  return org
+}
+
+export async function requireOrganization() {
+  const org = await auth.api.getFullOrganization({
+    headers: await headers()
+  })
+
+  if (!org) redirect('/dashboard/com')
+  
+  return org
+}
+
 export async function requirePermission(permissionName: string, organizationSlug: string) {
   const session = await auth.api.getSession({
     headers: await headers()

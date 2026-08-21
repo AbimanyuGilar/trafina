@@ -8,56 +8,51 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
-  email         String
-  role          String
-  emailVerified Boolean   @default(false)
+  email         String       @unique
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  role          String
   accounts      Account[]
   invitations   Invitation[]
-  members Member[]
+  members       Member[]
+  sessions      Session[]
 
-  @@unique([email])
   @@map("user")
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  logo      String?
-  metadata String?
-
-  members     Member[]
-  invitations Invitation[]
-  products Product[]
-  productCategories ProductCategory[]
-  paymentMethods PaymentMethod[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String                @id @default(cuid())
+  name                  String
+  slug                  String                @unique
+  logo                  String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  metadata              String?
+  invitations           Invitation[]
+  members               Member[]
+  paymentMethods        PaymentMethod[]
+  products              Product[]
+  productCategories     ProductCategory[]
+  transactions          Transaction[]
+  transactionCategories TransactionCategory[]
 
   @@map("organization")
-  transactions Transaction[]
-  transactionCategories TransactionCategory[]
 }
 
 model Member {
   id             String             @id @default(cuid())
-  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         String
-  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String
+  userId         String
   role           String
-
-  permissions    MemberPermission[]
-
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permissions    MemberPermission[]
 
   @@unique([organizationId, userId])
   @@map("member")
@@ -66,8 +61,8 @@ model Member {
 model MemberPermission {
   id           String     @id @default(cuid())
   memberId     String
-  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
   permissionId String
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, permissionId])
@@ -83,109 +78,96 @@ model Permission {
 }
 
 model Invitation {
-	id String @id
-	email String
-	inviter User @relation(fields: [inviterId], references: [id])
-	inviterId String
-	organization Organization @relation(fields: [organizationId], references: [id])
-	organizationId String
-	role String?
-	status String
-	createdAt DateTime @db.Timestamptz(3)
-	expiresAt DateTime @db.Timestamptz(3)
-	@@map("invitation")
+  id             String       @id
+  email          String
+  inviterId      String
+  organizationId String
+  role           String?
+  status         String
+  createdAt      DateTime     @db.Timestamptz(3)
+  expiresAt      DateTime     @db.Timestamptz(3)
+  inviter        User         @relation(fields: [inviterId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("invitation")
 }
 
 model Product {
-  id String @id @default(cuid())
-  name String
-  price Int
-  stock Int
-  organizationId String
-  organization Organization @relation(fields: [organizationId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String            @id @default(cuid())
+  name              String
+  price             Int
+  stock             Int
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  organizationId    String
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   productCategories ProductCategory[]
 
   @@map("product")
 }
 
 model ProductCategory {
-  id String @id @default(cuid())
-  productId String
+  id             String       @id @default(cuid())
+  productId      String
   organizationId String
-
-  product Product @relation(fields: [productId], references: [id])
-  ortanization Organization @relation(fields: [organizationId], references: [id])
+  ortanization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id])
 
   @@map("productCategory")
 }
 
-
 model PaymentMethod {
-  id String @id @default(cuid())
-  name String
+  id             String       @id @default(cuid())
+  name           String
   organizationId String
-
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("paymentMethod")
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
-}
-
 model Transaction {
-  id String @id @default(cuid())
-  paymentMethodId String
-  totalPrice BigInt
-  detail String
-  receipt String
-  paymentMethod String
+  id                  String          @id @default(cuid())
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  detail              String
+  paymentMethod       String
+  totalPrice          Int
+  organizationId      String
+  receipt             String?
   transactionCategory String
-  transactionType TransactionType
-
-  organizationId String
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  transactionType     TransactionType
+  organization        Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("transaction")
 }
 
 model TransactionCategory {
-  id String @id @default(cuid())
-  name String
+  id             String          @id @default(cuid())
+  name           String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
   organizationId String
-  organization Organization @relation(fields: [organizationId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  type           TransactionType
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("transaction_category")
 }
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String   @id
+  expiresAt            DateTime
+  token                String   @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  ipAddress            String?
+  userAgent            String?
+  userId               String
   activeOrganizationId String?
-	activeTeamId String?
+  activeTeamId         String?
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-
-  @@unique([token])
   @@index([userId])
   @@map("session")
 }
@@ -195,7 +177,6 @@ model Account {
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -205,6 +186,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("account")
@@ -220,4 +202,9 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
 }
