@@ -58,7 +58,7 @@ export const auth = betterAuth({
     nextCookies(),
     organization({
       async sendInvitationEmail(data) {
-        const url = `http://localhost:3000/accept-invitation/${data.id}/com/${data.organization.slug}`;
+        const url = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}/com/${data.organization.slug}`;
         sendMail({
           to: data.email,
           from: 'FinansialApp <gilarwaluyo@gmail.com>',
