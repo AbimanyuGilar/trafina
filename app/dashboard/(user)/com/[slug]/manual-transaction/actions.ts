@@ -102,6 +102,10 @@ export async function getTransactions({
       skip,
       take: pageSize,
       where: {
+        transactionCategory: {
+          not: 'Kasir'
+        },
+        
         organizationId: org?.id,
 
         ...(type && {

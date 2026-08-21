@@ -243,7 +243,7 @@ export default function TransactionMethodList() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-600">
+            <table className="w-full min-w-max md:min-w-full text-left text-sm text-slate-600 whitespace-nowrap">
               <thead className="bg-slate-50/80 border-b border-slate-200 text-xs uppercase tracking-wide font-semibold text-slate-500">
                 <tr>
                   <th scope="col" className="px-6 py-3.5">Nama Metode Transaksi</th>

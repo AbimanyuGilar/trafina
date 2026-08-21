@@ -43,7 +43,7 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
     const slug = generateUniqueSlug(name)
 
     const { data, error } = await authClient.organization.create({
-      name, // required
+      name,
       slug,
       metadata: {
         email,
@@ -63,7 +63,7 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
       toast.success("Perusahaan berhasil ditambahkan")
 
       NProgress.start()
-      router.push(`/dashboard/com/${slug}`)
+      router.push(`/dashboard`)
     }
 
     setIsLoading(false)

@@ -29,6 +29,9 @@ const ManualTransactionPage = async ({ params }: { params: Promise<{ slug: strin
   const totalTransactions = await prisma.transaction.count({
     where: {
       organizationId: org?.id,
+      transactionCategory: {
+        not: 'Kasir'
+      }
     }
   })
 

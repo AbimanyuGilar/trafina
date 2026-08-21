@@ -93,16 +93,6 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
             <p className="text-lg font-semibold text-slate-900">{companyData.members.length - 1}</p>
           </div>
         </div>
-
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-            <FileText size={24} strokeWidth={1.75} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Toko</p>
-            <p className="text-lg font-semibold text-slate-900">0</p>
-          </div>
-        </div>
       </div>
 
       {/* 3. Tab Navigation */}
