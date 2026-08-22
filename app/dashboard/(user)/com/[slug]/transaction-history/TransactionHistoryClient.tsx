@@ -11,14 +11,14 @@ import {
   X,
   Eye,
   Trash2,
-  Pencil,
   ChevronDown,
   Tag,
-  Hash,
   FileText,
   TrendingUp,
   TrendingDown,
   ReceiptText,
+  ShoppingCart,
+  Package,
 } from "lucide-react"
 
 type Transaction = {
@@ -29,7 +29,6 @@ type Transaction = {
   paymentMethod: string
   detail: string
   date: string
-  edited?: boolean
 }
 
 type TransactionHistoryClientProps = {
@@ -59,6 +58,97 @@ const formatDateFull = (date: string) =>
     hour: "2-digit",
     minute: "2-digit",
   })
+
+// ── Kasir receipt component ──────────────────────────────────────────────────
+
+type KasirProduct = {
+  id: string
+  name: string
+  price: number
+  amount: number
+}
+
+const KasirDetail = ({ detail }: { detail: string }) => {
+  let products: KasirProduct[] = []
+  try {
+    products = JSON.parse(detail)
+  } catch {
+    return (
+      <p className="text-sm" style={{ color: "#334155" }}>
+        {detail}
+      </p>
+    )
+  }
+
+  const grandTotal = products.reduce((sum, p) => sum + p.price * p.amount, 0)
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ border: "1px solid #E2E8F0" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center gap-2 px-3 py-2"
+        style={{ backgroundColor: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}
+      >
+        <ShoppingCart size={13} strokeWidth={2} style={{ color: "#2563EB" }} />
+        <span
+          className="text-xs font-semibold uppercase"
+          style={{ color: "#2563EB", letterSpacing: "0.05em" }}
+        >
+          {products.length} item
+        </span>
+      </div>
+
+      {/* Product rows */}
+      <div className="divide-y" style={{ borderColor: "#F1F5F9" }}>
+        {products.map((p, i) => (
+          <div key={p.id ?? i} className="flex items-start gap-2 px-3 py-2.5">
+            <div
+              className="mt-0.5 w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center"
+              style={{ backgroundColor: "#EFF6FF" }}
+            >
+              <Package size={11} strokeWidth={2} style={{ color: "#2563EB" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className="text-xs font-semibold leading-tight truncate"
+                style={{ color: "#0F172A" }}
+              >
+                {p.name}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
+                {p.amount} × {formatCurrency(p.price)}
+              </p>
+            </div>
+            <p
+              className="text-xs font-semibold flex-shrink-0"
+              style={{ color: "#334155" }}
+            >
+              {formatCurrency(p.price * p.amount)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Grand total */}
+      <div
+        className="flex items-center justify-between px-3 py-2.5"
+        style={{ backgroundColor: "#F8FAFC", borderTop: "1px solid #E2E8F0" }}
+      >
+        <span className="text-xs font-semibold" style={{ color: "#64748B" }}>
+          Total
+        </span>
+        <span className="text-sm font-bold" style={{ color: "#16A34A" }}>
+          {formatCurrency(grandTotal)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 const TransactionHistoryClient = ({
   transactions,
@@ -107,31 +197,6 @@ const TransactionHistoryClient = ({
   const totalExpense = filteredTransactions
     .filter((tx) => tx.type === "EXPENSE")
     .reduce((sum, tx) => sum + tx.total, 0)
-
-  const handleDelete = (id: string) => {
-    const confirmed = window.confirm("Yakin ingin menghapus transaksi ini?")
-    if (confirmed) {
-      setTransactionList((prev) => prev.filter((tx) => tx.id !== id))
-      if (selectedTransaction?.id === id) setSelectedTransaction(null)
-    }
-  }
-
-  const handleEdit = (id: string) => {
-    const currentTx = transactionList.find((tx) => tx.id === id)
-    if (!currentTx) return
-    const newTotal = window.prompt(
-      "Masukkan nominal Total yang baru:",
-      currentTx.total.toString()
-    )
-    if (newTotal === null || newTotal.trim() === "") return
-    setTransactionList((prev) =>
-      prev.map((tx) =>
-        tx.id === id
-          ? { ...tx, total: Number(newTotal), edited: true }
-          : tx
-      )
-    )
-  }
 
   const hasActiveFilters =
     filterType !== "ALL" ||
@@ -447,19 +512,6 @@ const TransactionHistoryClient = ({
                           >
                             {tx.category || "—"}
                           </span>
-                          {tx.edited && (
-                            <span
-                              className="text-xs font-semibold uppercase rounded-full px-2 py-0.5"
-                              style={{
-                                backgroundColor: "#FEF9C3",
-                                color: "#854D0E",
-                                letterSpacing: "0.05em",
-                                fontSize: "0.65rem",
-                              }}
-                            >
-                              Diedit
-                            </span>
-                          )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span
@@ -499,22 +551,6 @@ const TransactionHistoryClient = ({
                           >
                             <Eye size={13} strokeWidth={2} />
                           </button>
-                          <button
-                            onClick={() => handleEdit(tx.id)}
-                            className="txh-btn-icon p-1.5 rounded-lg"
-                            style={{ backgroundColor: "#F1F5F9", color: "#475569" }}
-                            title="Edit"
-                          >
-                            <Pencil size={13} strokeWidth={2} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(tx.id)}
-                            className="txh-btn-icon p-1.5 rounded-lg"
-                            style={{ backgroundColor: "#FFF1F2", color: "#DC2626" }}
-                            title="Hapus"
-                          >
-                            <Trash2 size={13} strokeWidth={2} />
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -542,30 +578,31 @@ const TransactionHistoryClient = ({
           }}
         >
           <div
-            className="txh-modal-panel w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl overflow-hidden"
+            className="txh-modal-panel w-full sm:max-w-md flex flex-col rounded-t-2xl sm:rounded-2xl"
             style={{
               backgroundColor: "#FFFFFF",
               border: "1px solid #E2E8F0",
               boxShadow: "0 20px 60px -10px rgba(0,0,0,0.15), 0 8px 24px -8px rgba(0,0,0,0.1)",
+              maxHeight: "90dvh",
             }}
           >
-            {/* Modal Header */}
+            {/* Modal Header — fixed */}
             <div
-              className="flex items-center justify-between px-5 py-4"
+              className="flex-shrink-0 flex items-center justify-between px-5 py-4"
               style={{ borderBottom: "1px solid #F1F5F9" }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center"
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
                   style={{
                     backgroundColor:
                       selectedTransaction.type === "INCOME" ? "#F0FDF4" : "#FFF1F2",
                   }}
                 >
                   {selectedTransaction.type === "INCOME" ? (
-                    <ArrowUpCircle size={15} strokeWidth={1.75} color="#16A34A" />
+                    <ArrowUpCircle size={16} strokeWidth={1.75} color="#16A34A" />
                   ) : (
-                    <ArrowDownCircle size={15} strokeWidth={1.75} color="#DC2626" />
+                    <ArrowDownCircle size={16} strokeWidth={1.75} color="#DC2626" />
                   )}
                 </div>
                 <h2
@@ -577,130 +614,134 @@ const TransactionHistoryClient = ({
               </div>
               <button
                 onClick={() => setSelectedTransaction(null)}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
+                className="w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: "#F1F5F9", color: "#64748B" }}
               >
-                <X size={14} strokeWidth={2.5} />
+                <X size={15} strokeWidth={2.5} />
               </button>
             </div>
 
-            {/* Amount Highlight */}
-            <div
-              className="px-5 py-5"
-              style={{ backgroundColor: "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}
-            >
-              <p
-                className="text-xs font-medium uppercase mb-1"
-                style={{ color: "#94A3B8", letterSpacing: "0.05em" }}
-              >
-                Total
-              </p>
-              <p
-                className="text-3xl font-bold"
-                style={{
-                  color:
-                    selectedTransaction.type === "INCOME" ? "#16A34A" : "#DC2626",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {selectedTransaction.type === "INCOME" ? "+" : "-"}
-                {formatCurrency(selectedTransaction.total)}
-              </p>
-            </div>
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto min-h-0">
 
-            {/* Detail Rows */}
-            <div className="px-5 py-4 flex flex-col gap-3.5">
-              {[
-                {
-                  icon: <Hash size={14} strokeWidth={2} />,
-                  label: "ID Transaksi",
-                  value: selectedTransaction.id,
-                  mono: true,
-                },
-                {
-                  icon: <ArrowUpCircle size={14} strokeWidth={2} />,
-                  label: "Jenis",
-                  value:
-                    selectedTransaction.type === "INCOME"
-                      ? "Pemasukan"
-                      : "Pengeluaran",
-                },
-                {
-                  icon: <Tag size={14} strokeWidth={2} />,
-                  label: "Kategori",
-                  value: selectedTransaction.category,
-                },
-                {
-                  icon: <Calendar size={14} strokeWidth={2} />,
-                  label: "Tanggal",
-                  value: formatDateFull(selectedTransaction.date),
-                },
-                {
-                  icon: <CreditCard size={14} strokeWidth={2} />,
-                  label: "Metode Pembayaran",
-                  value: selectedTransaction.paymentMethod,
-                },
-                {
-                  icon: <FileText size={14} strokeWidth={2} />,
-                  label: "Catatan",
-                  value: selectedTransaction.detail || "—",
-                },
-              ].map(({ icon, label, value, mono }) => (
-                <div key={label} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex-shrink-0" style={{ color: "#94A3B8" }}>
-                    {icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium mb-0.5" style={{ color: "#94A3B8" }}>
-                      {label}
-                    </p>
-                    <p
-                      className="text-sm break-all"
+              {/* Amount Highlight */}
+              <div
+                className="px-5 py-4"
+                style={{ backgroundColor: "#FAFAFA", borderBottom: "1px solid #F1F5F9" }}
+              >
+                <p
+                  className="text-xs font-semibold uppercase mb-1"
+                  style={{ color: "#94A3B8", letterSpacing: "0.06em" }}
+                >
+                  {selectedTransaction.type === "INCOME" ? "Total Pemasukan" : "Total Pengeluaran"}
+                </p>
+                <p
+                  className="text-2xl font-bold leading-tight"
+                  style={{
+                    color: selectedTransaction.type === "INCOME" ? "#16A34A" : "#DC2626",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  {selectedTransaction.type === "INCOME" ? "+" : "-"}
+                  {formatCurrency(selectedTransaction.total)}
+                </p>
+                <p className="text-xs mt-1.5" style={{ color: "#94A3B8" }}>
+                  {formatDateFull(selectedTransaction.date)}
+                </p>
+              </div>
+
+              {/* Info Rows */}
+              <div className="px-5 pt-4 pb-2">
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{ border: "1px solid #E2E8F0" }}
+                >
+                  {[
+                    {
+                      icon: <ArrowUpCircle size={13} strokeWidth={2} />,
+                      label: "Jenis",
+                      value:
+                        selectedTransaction.type === "INCOME"
+                          ? "Pemasukan"
+                          : "Pengeluaran",
+                      valueColor:
+                        selectedTransaction.type === "INCOME" ? "#16A34A" : "#DC2626",
+                    },
+                    {
+                      icon: <Tag size={13} strokeWidth={2} />,
+                      label: "Kategori",
+                      value: selectedTransaction.category,
+                    },
+                    {
+                      icon: <CreditCard size={13} strokeWidth={2} />,
+                      label: "Metode Pembayaran",
+                      value: selectedTransaction.paymentMethod,
+                    },
+                  ].map(({ icon, label, value, valueColor }, i, arr) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between px-4 py-3"
                       style={{
-                        color: "#334155",
-                        fontFamily: mono ? "monospace" : undefined,
-                        fontSize: mono ? "0.75rem" : undefined,
+                        borderBottom: i < arr.length - 1 ? "1px solid #F1F5F9" : "none",
                       }}
                     >
-                      {value}
+                      <div className="flex items-center gap-2 flex-shrink-0" style={{ color: "#94A3B8" }}>
+                        {icon}
+                        <span className="text-xs font-medium" style={{ color: "#64748B" }}>
+                          {label}
+                        </span>
+                      </div>
+                      <span
+                        className="text-sm font-semibold text-right ml-4"
+                        style={{ color: valueColor ?? "#0F172A" }}
+                      >
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catatan / Items */}
+              <div className="px-5 pt-3 pb-4">
+                <div className="flex items-center gap-1.5 mb-2.5">
+                  {selectedTransaction.category === "Kasir" ? (
+                    <ShoppingCart size={13} strokeWidth={2} style={{ color: "#64748B" }} />
+                  ) : (
+                    <FileText size={13} strokeWidth={2} style={{ color: "#64748B" }} />
+                  )}
+                  <span className="text-xs font-semibold" style={{ color: "#64748B" }}>
+                    {selectedTransaction.category === "Kasir" ? "Item Pembelian" : "Catatan"}
+                  </span>
+                </div>
+
+                {selectedTransaction.category === "Kasir" ? (
+                  <KasirDetail detail={selectedTransaction.detail} />
+                ) : (
+                  <div
+                    className="rounded-xl px-4 py-3"
+                    style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
+                  >
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "#334155", whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                    >
+                      {selectedTransaction.detail || "—"}
                     </p>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
+
             </div>
 
-            {/* Modal Footer */}
+            {/* Modal Footer — fixed */}
             <div
-              className="px-5 py-4 flex gap-2"
+              className="flex-shrink-0 px-5 py-3 flex gap-2"
               style={{ borderTop: "1px solid #F1F5F9" }}
             >
               <button
-                onClick={() => handleEdit(selectedTransaction.id)}
-                className="flex-1 flex items-center justify-center gap-2 text-sm font-medium py-2.5 px-4 rounded-lg"
-                style={{
-                  backgroundColor: "#F1F5F9",
-                  color: "#334155",
-                  border: "1px solid #E2E8F0",
-                }}
-              >
-                <Pencil size={14} strokeWidth={2} />
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(selectedTransaction.id)}
-                className="flex items-center justify-center gap-2 text-sm font-medium py-2.5 px-4 rounded-lg"
-                style={{
-                  backgroundColor: "#FFF1F2",
-                  color: "#DC2626",
-                  border: "1px solid #FECDD3",
-                }}
-              >
-                <Trash2 size={14} strokeWidth={2} />
-                Hapus
-              </button>
-              <button
                 onClick={() => setSelectedTransaction(null)}
-                className="flex-1 flex items-center justify-center gap-2 text-sm font-medium py-2.5 px-4 rounded-lg"
+                className="flex-1 flex items-center justify-center text-sm font-semibold py-2.5 px-4 rounded-xl"
                 style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
               >
                 Tutup
