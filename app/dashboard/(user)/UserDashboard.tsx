@@ -339,7 +339,6 @@ export default function Dashboard({
               <thead className="bg-slate-50/80 text-xs font-semibold text-slate-500 uppercase">
                 <tr>
                   <th scope="col" className="px-4 py-3">Keterangan & Tanggal</th>
-                  <th scope="col" className="px-4 py-3">Kategori</th>
                   <th scope="col" className="px-4 py-3">Pembayaran</th>
                   <th scope="col" className="px-4 py-3 text-right">Jumlah</th>
                 </tr>
@@ -355,15 +354,10 @@ export default function Dashboard({
                             {isIncome ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
                           </div>
                           <div>
-                            <span className="block font-semibold text-slate-800 text-xs">{item.detail || 'Tanpa Keterangan'}</span>
+                            <span className="block font-semibold text-slate-800 text-xs">{item.transactionCategory || 'Tanpa Keterangan'}</span>
                             <span className="text-[10px] text-slate-400 flex items-center gap-1"><Calendar size={10} />{formatDate(item.createdAt)}</span>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-700 rounded border border-slate-200">
-                          {item.transactionCategory}
-                        </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-500 font-medium">
                         <div className="flex items-center gap-1.5">
