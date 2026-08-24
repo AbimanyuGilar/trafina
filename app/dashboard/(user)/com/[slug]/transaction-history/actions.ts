@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/prisma"
 import { getFullOrganization } from "@/lib/organizations"
+import { requireOrganization } from "@/lib/auth-guard"
+import { supabaseAdmin } from "@/lib/supabase"
 
 export async function getTransactions() {
   const org = await getFullOrganization()
@@ -23,8 +25,6 @@ export async function getTransactions() {
         createdAt: "desc",
       },
     })
-    
-    console.log("TRANSACTIONS DARI PRISMA:", transactions)
 
     const formattedTransactions = transactions.map((transaction) => ({
       id: transaction.id,
@@ -34,6 +34,7 @@ export async function getTransactions() {
       paymentMethod: transaction.paymentMethod,
       detail: transaction.detail,
       date: transaction.createdAt.toISOString(),
+      receipt: transaction.receipt,
     }))
 
     return {
@@ -48,5 +49,34 @@ export async function getTransactions() {
       message: "Gagal memuat transaksi.",
       data: [],
     }
+  }
+}
+
+export async function getReceiptSignedUrl(filePath: string) {
+  if (!filePath) {
+    return { success: false, message: 'File path tidak valid' }
+  }
+
+  const org = await requireOrganization()
+
+  const orgFile = filePath.split('/')[1]
+
+  if (org.id !== orgFile) return { success: false, message: 'Gagal mengambil URL file' }
+
+  try {
+    const { data, error } = await supabaseAdmin.storage
+      .from('image').createSignedUrl(filePath, 60)
+
+    if (error) {
+      console.error('Error Signed URL:', error.message)
+      return { success: false, message: 'Gagal mengambil URL file' }
+    }
+
+    return {
+      success: true,
+      url: data.signedUrl,
+    }
+  } catch (err) {
+    return { success: false, message: 'Terjadi kesalahan pada server' }
   }
 }

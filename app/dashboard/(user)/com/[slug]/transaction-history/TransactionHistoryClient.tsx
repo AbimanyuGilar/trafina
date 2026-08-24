@@ -21,6 +21,10 @@ import {
   Package,
 } from "lucide-react"
 
+import { toast } from "sonner"
+import Loading from "@/components/loading"
+import { getReceiptSignedUrl } from "./actions"
+
 type Transaction = {
   id: string
   type: string
@@ -29,6 +33,7 @@ type Transaction = {
   paymentMethod: string
   detail: string
   date: string
+  receipt?: string | null
 }
 
 type TransactionHistoryClientProps = {
@@ -163,6 +168,30 @@ const TransactionHistoryClient = ({
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null)
   const [showFilters, setShowFilters] = useState(false)
+
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
+  const [isLoadingReceipt, setIsLoadingReceipt] = useState(false)
+
+  const handleViewReceipt = async (filePath: string) => {
+    setSelectedReceipt(filePath)
+    setIsLoadingReceipt(true)
+    setReceiptUrl(null)
+    try {
+      const result = await getReceiptSignedUrl(filePath)
+      if (result.success && result.url) {
+        setReceiptUrl(result.url)
+      } else {
+        toast.error(result.message || "Gagal memuat struk")
+        setSelectedReceipt(null)
+      }
+    } catch {
+      toast.error("Gagal memuat struk")
+      setSelectedReceipt(null)
+    } finally {
+      setIsLoadingReceipt(false)
+    }
+  }
 
   const categories = [
     ...new Set(
@@ -542,10 +571,24 @@ const TransactionHistoryClient = ({
                           {tx.type === "INCOME" ? "+" : "-"}
                           {formatCurrency(tx.total)}
                         </span>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5">
+                          {tx.receipt && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleViewReceipt(tx.receipt!)
+                              }}
+                              className="txh-btn-icon flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                              style={{ backgroundColor: "#EFF6FF", color: "#2563EB" }}
+                              title="Lihat Struk"
+                            >
+                              <FileText size={12} strokeWidth={2} />
+                              <span>Struk</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => setSelectedTransaction(tx)}
-                            className="txh-btn-icon p-1.5 rounded-lg"
+                            className="txh-btn-icon p-1.5 rounded-lg cursor-pointer"
                             style={{ backgroundColor: "#EFF6FF", color: "#2563EB" }}
                             title="Lihat Detail"
                           >
@@ -730,6 +773,25 @@ const TransactionHistoryClient = ({
                     </p>
                   </div>
                 )}
+
+                {/* Struk Lampiran */}
+                {selectedTransaction.receipt && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => handleViewReceipt(selectedTransaction.receipt!)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                      style={{
+                        backgroundColor: "#EFF6FF",
+                        color: "#2563EB",
+                        border: "1px solid #BFDBFE",
+                      }}
+                    >
+                      <FileText size={14} strokeWidth={2} />
+                      <span>Lihat Lampiran Struk</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -741,8 +803,64 @@ const TransactionHistoryClient = ({
             >
               <button
                 onClick={() => setSelectedTransaction(null)}
-                className="flex-1 flex items-center justify-center text-sm font-semibold py-2.5 px-4 rounded-xl"
+                className="flex-1 flex items-center justify-center text-sm font-semibold py-2.5 px-4 rounded-xl cursor-pointer"
                 style={{ backgroundColor: "#2563EB", color: "#FFFFFF" }}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal View Receipt ── */}
+      {selectedReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          {/* Modal Container */}
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Gambar Struk</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedReceipt(null)
+                  setReceiptUrl(null)
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 flex flex-col items-center justify-center min-h-64 max-h-[70vh] overflow-y-auto bg-slate-50">
+              {isLoadingReceipt ? (
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <Loading size={24} />
+                  <span className="text-sm text-slate-500">Memuat gambar struk...</span>
+                </div>
+              ) : receiptUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={receiptUrl}
+                  alt="Struk Transaksi"
+                  className="max-w-full max-h-[60vh] object-contain rounded-lg border border-slate-200 shadow-sm"
+                />
+              ) : (
+                <span className="text-sm text-slate-500">Gagal memuat gambar struk</span>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-2.5 px-6 py-4 border-t border-slate-100 bg-white">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedReceipt(null)
+                  setReceiptUrl(null)
+                }}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 Tutup
               </button>
