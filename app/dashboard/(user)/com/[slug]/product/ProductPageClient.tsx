@@ -1,10 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { addProduct, editProduct, deleteProduct } from './actions'
-import { Search, Plus, Edit, Trash2, AlertTriangle, X, Check } from 'lucide-react'
+import { addProduct, editProduct, deleteProduct, addCategory, deleteCategory } from './actions'
+import { Search, Plus, Edit, Trash2, AlertTriangle, X, Check, Image as ImageIcon, Upload } from 'lucide-react'
+import Loading from '@/components/loading'
+import DeleteCard from '@/components/deleteCard'
+import Dropdown from '@/components/Dropdown'
 
 interface ProductCategory {
   id: string
@@ -18,6 +21,7 @@ interface ProductWithCategory {
   buyPrice: number
   unit: string
   stock: number
+  image?: string | null
   categories: {
     category: ProductCategory
   }[]
@@ -30,19 +34,48 @@ interface ProductPageClientProps {
   categories: ProductCategory[]
 }
 
+// Helper to get image URL from Supabase storage
+const getProductImageUrl = (imagePath: string | null | undefined) => {
+  if (!imagePath) return '/product.jpeg'
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl
+  
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath
+  }
+  
+  const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath
+  return `${baseUrl}/storage/v1/object/public/public_image/${cleanPath}`
+}
+
 export default function ProductPageClient({
   orgId,
   initialProducts,
-  categories
+  categories: initialCategories
 }: ProductPageClientProps) {
   const router = useRouter()
 
   // States
+  const [categories, setCategories] = useState<ProductCategory[]>(initialCategories)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [showLowStockOnly, setShowLowStockOnly] = useState(false)
 
-  // Modal states
+  // Sync categories prop
+  useEffect(() => {
+    setCategories(initialCategories)
+  }, [initialCategories])
+
+  // Category Modal States
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [isLoadingAddCategory, setIsLoadingAddCategory] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<ProductCategory | null>(null)
+  const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] = useState(false)
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false)
+
+  // Product Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -55,16 +88,20 @@ export default function ProductPageClient({
   const [price, setPrice] = useState('')
   const [unit, setUnit] = useState('pcs')
   const [stock, setStock] = useState('')
+  const [formImage, setFormImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // Open modal for add
   const handleOpenAddModal = () => {
     setCurrentProduct(null)
     setName('')
-    setCategoryName('')
+    setCategoryName(categories[0]?.name || '')
     setBuyPrice('')
     setPrice('')
     setUnit('pcs')
     setStock('')
+    setFormImage(null)
+    setImagePreview(null)
     setIsModalOpen(true)
   }
 
@@ -73,10 +110,12 @@ export default function ProductPageClient({
     setCurrentProduct(product)
     setName(product.name)
     setCategoryName(product.categories[0]?.category.name || '')
-    setBuyPrice(product.buyPrice.toString())
-    setPrice(product.price.toString())
+    setBuyPrice(product.buyPrice?.toString() ?? '0')
+    setPrice(product.price?.toString() ?? '0')
     setUnit(product.unit)
-    setStock(product.stock.toString())
+    setStock(product.stock?.toString() ?? '0')
+    setFormImage(null)
+    setImagePreview(product.image ? getProductImageUrl(product.image) : null)
     setIsModalOpen(true)
   }
 
@@ -86,7 +125,26 @@ export default function ProductPageClient({
     setIsDeleteOpen(true)
   }
 
-  // Submit Handler (Add/Edit)
+  // Handle Image File Input
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('File harus berupa gambar')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran gambar maksimal 5 MB')
+      return
+    }
+
+    setFormImage(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  // Submit Handler (Add/Edit Product)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -99,21 +157,25 @@ export default function ProductPageClient({
 
     setIsSubmitting(true)
 
-    const payload = {
-      name: name.trim(),
-      category: categoryName.trim(),
-      buyPrice: Number(buyPrice),
-      price: Number(price),
-      unit: unit.trim(),
-      stock: Number(stock)
+    const formData = new FormData()
+    formData.append('name', name.trim())
+    formData.append('category', categoryName.trim())
+    formData.append('buyPrice', buyPrice)
+    formData.append('price', price)
+    formData.append('unit', unit.trim())
+    formData.append('stock', stock)
+    if (formImage) {
+      formData.append('image', formImage)
+    } else if (currentProduct && !imagePreview && currentProduct.image) {
+      formData.append('removeImage', 'true')
     }
 
     try {
       let result
       if (currentProduct) {
-        result = await editProduct(orgId, currentProduct.id, payload)
+        result = await editProduct(orgId, currentProduct.id, formData)
       } else {
-        result = await addProduct(orgId, payload)
+        result = await addProduct(orgId, formData)
       }
 
       if (result.success) {
@@ -150,6 +212,66 @@ export default function ProductPageClient({
       toast.error("Terjadi kesalahan pada sistem.")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Category Add Handler
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCategoryName.trim()) {
+      toast.error("Nama kategori harus diisi")
+      return
+    }
+
+    setIsLoadingAddCategory(true)
+    try {
+      const result = await addCategory(newCategoryName, orgId)
+      if (result.success && result.data) {
+        toast.success("Kategori berhasil ditambahkan!")
+        setCategories(prev => [result.data, ...prev])
+        setNewCategoryName('')
+        router.refresh()
+      } else {
+        toast.error(result.message || "Gagal menambahkan kategori.")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Terjadi kesalahan saat menambahkan kategori.")
+    } finally {
+      setIsLoadingAddCategory(false)
+    }
+  }
+
+  // Show Category Delete Confirmation
+  const showDeleteCategoryModal = (cat: ProductCategory) => {
+    setCategoryToDelete(cat)
+    setIsDeleteCategoryModalOpen(true)
+  }
+
+  // Category Delete Handler
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return
+    setIsDeletingCategory(true)
+
+    try {
+      const result = await deleteCategory(categoryToDelete.id, orgId)
+      if (result.success) {
+        toast.success("Kategori berhasil dihapus!")
+        setCategories(prev => prev.filter(c => c.id !== categoryToDelete.id))
+        if (selectedCategory === categoryToDelete.name) {
+          setSelectedCategory('ALL')
+        }
+        setIsDeleteCategoryModalOpen(false)
+        setCategoryToDelete(null)
+        router.refresh()
+      } else {
+        toast.error(result.message || "Gagal menghapus kategori.")
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error("Terjadi kesalahan saat menghapus kategori.")
+    } finally {
+      setIsDeletingCategory(false)
     }
   }
 
@@ -242,16 +364,27 @@ export default function ProductPageClient({
         {/* Opsi Filter */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Category Dropdown */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+          <div className="min-w-44">
+            <Dropdown
+              options={[
+                { value: 'ALL', label: 'Semua Kategori' },
+                ...categories.map((c) => ({ value: c.name, label: c.name, key: c.id }))
+              ]}
+              value={selectedCategory}
+              onChange={setSelectedCategory}
+              placeholder="Semua Kategori"
+            />
+          </div>
+
+          {/* Atur Kategori Button */}
+          <button
+            type="button"
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold text-blue-600 border border-blue-600 hover:bg-blue-50 active:bg-blue-100 rounded-xl shadow-xs transition-all cursor-pointer"
           >
-            <option value="ALL">Semua Kategori</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.name}>{c.name}</option>
-            ))}
-          </select>
+            <Edit size={15} strokeWidth={2} />
+            <span>Atur Kategori</span>
+          </button>
 
           {/* Toggle Stok Menipis */}
           <button
@@ -275,7 +408,7 @@ export default function ProductPageClient({
             <table className="w-full text-left text-sm text-slate-600 whitespace-nowrap">
               <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
                 <tr>
-                  <th scope="col" className="px-6 py-4">Nama Produk</th>
+                  <th scope="col" className="px-6 py-4">Produk</th>
                   <th scope="col" className="px-6 py-4">Kategori</th>
                   <th scope="col" className="px-6 py-4 text-right">Harga Beli</th>
                   <th scope="col" className="px-6 py-4 text-right">Harga Jual</th>
@@ -291,8 +424,18 @@ export default function ProductPageClient({
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/50 transition">
-                      <td className="px-6 py-4 font-semibold text-slate-900">
-                        {p.name}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50 flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={getProductImageUrl(p.image)}
+                              alt={p.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="font-semibold text-slate-900">{p.name}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-600 rounded border border-slate-200">
@@ -352,21 +495,69 @@ export default function ProductPageClient({
 
       {/* --- ADD / EDIT PRODUCT MODAL --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto transform transition-all animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h2 className="text-lg font-bold text-slate-900">
                 {currentProduct ? 'Edit Produk' : 'Tambah Produk Baru'}
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-50 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-50 transition cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Foto Produk */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1.5">
+                  Foto Produk (Opsional)
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-xl border-2 border-dashed border-slate-200 overflow-hidden bg-slate-50 flex items-center justify-center shrink-0">
+                    {imagePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="text-slate-400" size={28} />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <label className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shadow-xs cursor-pointer transition">
+                      <Upload size={14} />
+                      <span>{imagePreview ? 'Ganti Foto' : 'Unggah Foto'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormImage(null)
+                          setImagePreview(null)
+                        }}
+                        className="block text-xs text-rose-600 hover:underline cursor-pointer"
+                      >
+                        Hapus Foto
+                      </button>
+                    )}
+                    <p className="text-[11px] text-slate-400">
+                      Maksimal ukuran file: 5 MB (PNG, JPG, JPEG, WEBP)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Nama Produk */}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Nama Produk</label>
@@ -376,27 +567,23 @@ export default function ProductPageClient({
                   placeholder="Contoh: Kopi Susu Aren"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                 />
               </div>
 
               {/* Kategori */}
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Kategori</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Pilih atau ketik kategori baru"
-                  list="existing-categories"
+                <Dropdown
+                  options={categories.map((c) => ({
+                    value: c.name,
+                    label: c.name,
+                    key: c.id
+                  }))}
                   value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                  onChange={setCategoryName}
+                  placeholder="Pilih Kategori"
                 />
-                <datalist id="existing-categories">
-                  {categories.map(c => (
-                    <option key={c.id} value={c.name} />
-                  ))}
-                </datalist>
               </div>
 
               {/* Harga Beli & Harga Jual */}
@@ -410,7 +597,7 @@ export default function ProductPageClient({
                     placeholder="0"
                     value={buyPrice}
                     onChange={(e) => setBuyPrice(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
                 <div>
@@ -422,7 +609,7 @@ export default function ProductPageClient({
                     placeholder="0"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
               </div>
@@ -437,7 +624,7 @@ export default function ProductPageClient({
                     placeholder="pcs / kg / box"
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
                 <div>
@@ -449,7 +636,7 @@ export default function ProductPageClient({
                     placeholder="0"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
               </div>
@@ -459,7 +646,7 @@ export default function ProductPageClient({
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all duration-200 border border-slate-200 rounded-lg cursor-pointer"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all duration-200 border border-slate-200 rounded-xl cursor-pointer"
                   disabled={isSubmitting}
                 >
                   Batal
@@ -467,9 +654,16 @@ export default function ProductPageClient({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-95 disabled:scale-100 disabled:opacity-50 transition-all duration-200 rounded-lg shadow-sm cursor-pointer"
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-95 disabled:scale-100 disabled:opacity-50 transition-all duration-200 rounded-xl shadow-xs cursor-pointer min-w-24"
                 >
-                  {isSubmitting ? "Menyimpan..." : "Simpan"}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <Loading size={16} />
+                      <span>Menyimpan...</span>
+                    </div>
+                  ) : (
+                    <span>Simpan</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -477,35 +671,114 @@ export default function ProductPageClient({
         </div>
       )}
 
-      {/* --- DELETE CONFIRMATION DIALOG --- */}
-      {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 backdrop-blur-md p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all animate-in fade-in zoom-in-95 duration-200 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">Hapus Produk?</h2>
-            <p className="text-sm text-slate-500 leading-relaxed">
-              Apakah Anda yakin ingin menghapus produk <span className="font-semibold text-slate-800">"{currentProduct?.name}"</span>? Tindakan ini tidak dapat dibatalkan.
-            </p>
+      {/* --- ATUR KATEGORI MODAL --- */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Atur Kategori Produk</h3>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                onClick={() => setIsDeleteOpen(false)}
-                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 hover:scale-[1.02] active:scale-95 transition-all duration-200 border border-slate-200 rounded-lg cursor-pointer"
-                disabled={isSubmitting}
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isSubmitting}
-                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 hover:scale-[1.02] active:scale-95 disabled:scale-100 disabled:opacity-50 transition-all duration-200 rounded-lg shadow-sm cursor-pointer"
-              >
-                {isSubmitting ? "Menghapus..." : "Hapus"}
-              </button>
+            {/* Modal Form */}
+            <form onSubmit={handleAddCategory} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                  Nama Kategori Baru
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Contoh: Makanan, Minuman, Snack"
+                  className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+                <button
+                  disabled={isLoadingAddCategory}
+                  type="submit"
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 disabled:bg-blue-300 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-32"
+                >
+                  {isLoadingAddCategory ? (
+                    <div className="flex items-center gap-2">
+                      <Loading size={16} />
+                      <span>Menambahkan...</span>
+                    </div>
+                  ) : (
+                    <span>Tambah Kategori</span>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            {/* List Kategori */}
+            <div className="border-t border-slate-100 p-6 bg-slate-50/50">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                Daftar Kategori ({categories.length})
+              </h4>
+              {categories.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">Belum ada kategori yang terdaftar.</p>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs"
+                    >
+                      <span className="text-sm font-semibold text-slate-800">{cat.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => showDeleteCategoryModal(cat)}
+                        className="text-red-500 hover:bg-red-50 p-1.5 cursor-pointer rounded-lg transition"
+                        title="Hapus Kategori"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
+      {/* Delete Category Confirmation Dialog */}
+      <DeleteCard
+        isOpen={isDeleteCategoryModalOpen}
+        isLoading={isDeletingCategory}
+        onClose={() => {
+          setIsDeleteCategoryModalOpen(false)
+          setCategoryToDelete(null)
+        }}
+        onConfirm={handleDeleteCategory}
+        title="Hapus Kategori Produk"
+        description="Apakah Anda yakin ingin menghapus kategori ini? Produk yang memiliki kategori ini akan tetap ada."
+        itemName={categoryToDelete?.name}
+      />
+
+      {/* Delete Product Confirmation Dialog */}
+      <DeleteCard
+        isOpen={isDeleteOpen}
+        isLoading={isSubmitting}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDelete}
+        title="Hapus Produk"
+        description="Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan."
+        itemName={currentProduct?.name}
+      />
+
     </div>
   )
 }
+
