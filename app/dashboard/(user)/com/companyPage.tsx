@@ -6,6 +6,8 @@ import { authClient } from '@/lib/auth-client'
 import { useRouter } from 'next/navigation'
 import NProgress from 'nprogress'
 
+import { toast } from 'sonner'
+
 export default function CompanyPage ({ companies, activeCompany }: { companies: any, activeCompany: any}) {
   const router = useRouter()
 
@@ -16,9 +18,13 @@ export default function CompanyPage ({ companies, activeCompany }: { companies: 
       organizationId,
     });
     
-    router.push(`/dashboard`)
+    if (error) {
+      toast.error(error.message || "Gagal memilih perusahaan");
+      NProgress.done();
+      return;
+    }
 
-    router.refresh()
+    window.location.href = '/dashboard'
   }
 
   return (

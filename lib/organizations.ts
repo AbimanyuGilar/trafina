@@ -5,12 +5,13 @@ import { requireRoles } from "./auth-guard";
 export const getFullOrganization = async ({ organizationId, organizationSlug }: { organizationId?: string, organizationSlug?: string } = {}) => {
   const session = await requireRoles(['USER'])
   
+  const query: { organizationId?: string; organizationSlug?: string } = {};
+  if (organizationId) query.organizationId = organizationId;
+  if (organizationSlug) query.organizationSlug = organizationSlug;
+
   const org = await auth.api.getFullOrganization({
     headers: await headers(),
-    query: {
-      organizationId,
-      organizationSlug
-    }
+    ...(Object.keys(query).length > 0 && { query })
   });
 
   if (!org) {
