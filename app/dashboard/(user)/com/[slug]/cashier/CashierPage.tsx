@@ -398,12 +398,15 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
 
   const renderCart = (isMobile: boolean = false) => {
     return (
-      <div className={`bg-white rounded-2xl overflow-hidden flex flex-col ${isMobile ? 'h-full max-h-[80vh]' : 'border border-slate-200 shadow-xs'}`}>
+      <div className={`bg-white rounded-2xl overflow-hidden flex flex-col ${isMobile ? 'h-full max-h-[88dvh]' : 'border border-slate-200 shadow-xs'}`}>
         {/* Cart Header */}
-        <div className="px-5 py-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-5 py-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <ShoppingCart size={18} className="text-slate-500" />
             <span className="font-bold text-slate-900 text-sm">Item Transaksi</span>
+            <span className="text-xs bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -423,194 +426,204 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
           </div>
         </div>
 
-        {/* Cart Items Scroll Container */}
-        <div className={`divide-y divide-slate-100 overflow-y-auto px-5 ${isMobile ? 'flex-1 min-h-[200px] max-h-[45vh]' : 'max-h-[320px]'}`}>
-          {cart.map((item) => (
-            <div key={item.product.id} className="py-4 flex items-center justify-between gap-3 animate-in fade-in duration-100">
-              {/* Product Thumbnail */}
-              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-100 bg-slate-50 shrink-0 flex items-center justify-center">
-                <img
-                  src={getProductImageUrl(item.product.image)}
-                  alt={item.product.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/product.png'
-                  }}
-                />
-              </div>
-
-              <div className="min-w-0 flex-1 text-left">
-                <span className="block font-semibold text-slate-900 text-sm truncate">
-                  {item.product.name}
-                </span>
-                <span className="block text-xs text-slate-500 mt-0.5">
-                  {formatRupiah(item.product.price)} / unit
-                </span>
-              </div>
-
-              {/* Quantity Adjustment Buttons */}
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => handleDecrement(item.product.id)}
-                  className="p-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 active:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  <Minus size={12} strokeWidth={2.5} />
-                </button>
-                
-                <span className="text-xs font-bold text-slate-800 w-5 text-center select-none">
-                  {item.quantity}
-                </span>
-
-                <button
-                  onClick={() => handleIncrement(item.product.id)}
-                  disabled={item.quantity >= item.product.stock}
-                  className="p-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 active:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                >
-                  <Plus size={12} strokeWidth={2.5} />
-                </button>
-              </div>
-
-              {/* Line Total & Remove button */}
-              <div className="flex items-center gap-2 pl-1 shrink-0">
-                <span className="font-bold text-slate-900 text-xs min-w-[70px] text-right">
-                  {formatRupiah(item.product.price * item.quantity)}
-                </span>
-                <button
-                  onClick={() => handleRemoveItem(item.product.id)}
-                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1 rounded-lg transition-colors cursor-pointer"
-                  title="Hapus"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Checkout Calculation and Form Section */}
-        <div className="p-5 border-t border-slate-200 bg-slate-50/50 space-y-4">
-          {/* Total pricing details */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Subtotal Belanja</span>
-              <span className="font-semibold text-slate-700">{formatRupiah(subtotal)}</span>
-            </div>
-            <div className="flex items-center justify-between text-base font-bold text-slate-900 pt-2 border-t border-dashed border-slate-200">
-              <span>Total Pembayaran</span>
-              <span className="text-lg text-blue-600 font-extrabold">{formatRupiah(subtotal)}</span>
-            </div>
-          </div>
-
-          {/* Payment Methods */}
-          <div className="space-y-2 pt-2 border-t border-slate-200">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 text-left">
-              Metode Pembayaran
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {paymentMethods.map((method) => {
-                const isSelected = paymentMethod === method.name
-                return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() => {
-                      setPaymentMethod(method.name)
-                      if (method.name !== 'Tunai') {
-                        setCashReceived('')
-                      }
+        {/* Cart Items & Checkout Body Scroll Container */}
+        <div className={`overflow-y-auto flex-1 min-h-0 divide-y divide-slate-100 ${isMobile ? 'max-h-[calc(88dvh-65px)]' : 'max-h-[calc(100vh-220px)]'}`}>
+          {/* Cart Items List */}
+          <div className="divide-y divide-slate-100 px-5">
+            {cart.map((item) => (
+              <div key={item.product.id} className="py-3.5 flex items-start gap-3 animate-in fade-in duration-100">
+                {/* Product Thumbnail */}
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0 flex items-center justify-center mt-0.5">
+                  <img
+                    src={getProductImageUrl(item.product.image)}
+                    alt={item.product.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/product.png'
                     }}
-                    className={`flex-1 min-w-[80px] py-2 px-3 flex flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-semibold transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                  >
-                    {method.name === 'Tunai' ? (
-                      <Banknote size={15} strokeWidth={2} />
-                    ) : method.name === 'QRIS' ? (
-                      <QrCode size={15} strokeWidth={2} />
-                    ) : (
-                      <CreditCard size={15} strokeWidth={2} />
-                    )}
-                    <span>{method.name}</span>
-                  </button>
-                )
-              })}
-            </div>
+                  />
+                </div>
+
+                {/* Item Details & Stepper */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 text-left">
+                      <span className="block font-semibold text-slate-900 text-sm truncate">
+                        {item.product.name}
+                      </span>
+                      <span className="block text-xs text-slate-500 mt-0.5">
+                        {formatRupiah(item.product.price)} <span className="text-slate-400">/ unit</span>
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveItem(item.product.id)}
+                      className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1 rounded-lg transition-colors cursor-pointer shrink-0 -mr-1"
+                      title="Hapus"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+
+                  {/* Quantity Adjustment & Total Line Price */}
+                  <div className="flex items-center justify-between mt-2.5 pt-1">
+                    <span className="font-bold text-slate-900 text-sm">
+                      {formatRupiah(item.product.price * item.quantity)}
+                    </span>
+
+                    {/* Stepper Buttons */}
+                    <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                      <button
+                        onClick={() => handleDecrement(item.product.id)}
+                        className="w-6 h-6 rounded-md bg-white border border-slate-200/80 hover:bg-slate-100 active:scale-95 text-slate-700 flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                        aria-label="Kurangi jumlah"
+                      >
+                        <Minus size={12} strokeWidth={2.5} />
+                      </button>
+                      
+                      <span className="text-xs font-bold text-slate-800 min-w-[24px] text-center select-none">
+                        {item.quantity}
+                      </span>
+
+                      <button
+                        onClick={() => handleIncrement(item.product.id)}
+                        disabled={item.quantity >= item.product.stock}
+                        className="w-6 h-6 rounded-md bg-white border border-slate-200/80 hover:bg-slate-100 active:scale-95 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer shadow-2xs"
+                        aria-label="Tambah jumlah"
+                      >
+                        <Plus size={12} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Cash payment details */}
-          {paymentMethod === 'Tunai' && (
-            <div className="space-y-2 pt-2 border-t border-slate-200/60 animate-in fade-in duration-200">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 text-left">
-                Uang Diterima
-              </label>
-              
-              <div className="relative text-left">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">Rp</span>
-                <input
-                  type="text"
-                  placeholder="0"
-                  value={cashReceived}
-                  onChange={(e) => handleCashReceivedChange(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-left"
-                />
+          {/* Checkout Calculation and Form Section */}
+          <div className="p-5 bg-slate-50/50 space-y-4">
+            {/* Total pricing details */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Subtotal Belanja</span>
+                <span className="font-semibold text-slate-700">{formatRupiah(subtotal)}</span>
               </div>
-
-              {/* Quick Cash suggestion badges */}
-              <div className="flex flex-wrap gap-1 justify-start">
-                {quickAmounts.map((amount) => (
-                  <button
-                    key={amount}
-                    type="button"
-                    onClick={() => setCashReceived(amount.toString())}
-                    className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 border border-slate-200/50 transition-all cursor-pointer"
-                  >
-                    {amount === subtotal ? 'Uang Pas' : formatRupiah(amount)}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between text-base font-bold text-slate-900 pt-2 border-t border-dashed border-slate-200">
+                <span>Total Pembayaran</span>
+                <span className="text-lg text-blue-600 font-extrabold">{formatRupiah(subtotal)}</span>
               </div>
-
-              {/* Change calculations display */}
-              {cashReceivedNum > 0 && (
-                <div className="flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold bg-white border-slate-200 mt-2">
-                  <span className="text-slate-500">Kembalian</span>
-                  {changeAmount >= 0 ? (
-                    <span className="text-sm font-bold text-emerald-600">
-                      {formatRupiah(changeAmount)}
-                    </span>
-                  ) : (
-                    <span className="text-[11px] text-rose-600 font-medium">
-                      Kurang {formatRupiah(Math.abs(changeAmount))}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
-          )}
 
-          {/* Final Checkout Button */}
-          <button
-            onClick={handleCheckout}
-            disabled={isCheckoutDisabled || isSubmitting}
-            className={`w-full font-bold text-sm py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
-              isCheckoutDisabled || isSubmitting
-                ? 'bg-slate-200 text-slate-400 border border-slate-200 cursor-not-allowed'
-                : 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 hover:shadow-md active:translate-y-px'
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <RefreshCw size={15} className="animate-spin" />
-                <span>Memproses Transaksi...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle size={15} strokeWidth={2.5} />
-                <span>Selesaikan Transaksi</span>
-              </>
+            {/* Payment Methods */}
+            <div className="space-y-2 pt-2 border-t border-slate-200">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 text-left">
+                Metode Pembayaran
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {paymentMethods.map((method) => {
+                  const isSelected = paymentMethod === method.name
+                  return (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod(method.name)
+                        if (method.name !== 'Tunai') {
+                          setCashReceived('')
+                        }
+                      }}
+                      className={`py-2 px-2 flex flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-semibold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                      }`}
+                    >
+                      {method.name === 'Tunai' ? (
+                        <Banknote size={15} strokeWidth={2} />
+                      ) : method.name === 'QRIS' ? (
+                        <QrCode size={15} strokeWidth={2} />
+                      ) : (
+                        <CreditCard size={15} strokeWidth={2} />
+                      )}
+                      <span className="truncate max-w-full">{method.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Cash payment details */}
+            {paymentMethod === 'Tunai' && (
+              <div className="space-y-2 pt-2 border-t border-slate-200/60 animate-in fade-in duration-200">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 text-left">
+                  Uang Diterima
+                </label>
+                
+                <div className="relative text-left">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">Rp</span>
+                  <input
+                    type="text"
+                    placeholder="0"
+                    value={cashReceived}
+                    onChange={(e) => handleCashReceivedChange(e.target.value)}
+                    className="w-full pl-8 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-xl shadow-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all text-left"
+                  />
+                </div>
+
+                {/* Quick Cash suggestion badges */}
+                <div className="flex flex-wrap gap-1.5 justify-start">
+                  {quickAmounts.map((amount) => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => setCashReceived(amount.toString())}
+                      className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 transition-all cursor-pointer shadow-2xs"
+                    >
+                      {amount === subtotal ? 'Uang Pas' : formatRupiah(amount)}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Change calculations display */}
+                {cashReceivedNum > 0 && (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border text-xs font-semibold bg-white border-slate-200 mt-2">
+                    <span className="text-slate-500">Kembalian</span>
+                    {changeAmount >= 0 ? (
+                      <span className="text-sm font-bold text-emerald-600">
+                        {formatRupiah(changeAmount)}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-rose-600 font-medium">
+                        Kurang {formatRupiah(Math.abs(changeAmount))}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
-          </button>
+
+            {/* Final Checkout Button */}
+            <button
+              onClick={handleCheckout}
+              disabled={isCheckoutDisabled || isSubmitting}
+              className={`w-full font-bold text-sm py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
+                isCheckoutDisabled || isSubmitting
+                  ? 'bg-slate-200 text-slate-400 border border-slate-200 cursor-not-allowed'
+                : 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 hover:shadow-md active:translate-y-px'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <RefreshCw size={15} className="animate-spin" />
+                  <span>Memproses Transaksi...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle size={15} strokeWidth={2.5} />
+                  <span>Selesaikan Transaksi</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -825,8 +838,8 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
 
       {/* Mobile Cart Modal Popup Drawer */}
       {isMobileCartOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[85vh] overflow-hidden transform transition-all animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 lg:hidden flex items-end sm:items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[90dvh] overflow-hidden transform transition-all animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             {cart.length === 0 ? (
               <div className="p-8 text-center space-y-4">
                 <div className="flex justify-end -mt-2 -mr-2">

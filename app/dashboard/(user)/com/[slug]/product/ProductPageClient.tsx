@@ -135,8 +135,8 @@ export default function ProductPageClient({
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Ukuran gambar maksimal 5 MB')
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error('Ukuran gambar maksimal 1 MB')
       return
     }
 
