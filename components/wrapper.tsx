@@ -12,6 +12,7 @@ import {
   ChevronRight,
   ChevronDown,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function DashboardWrapper({
   user,
@@ -136,17 +137,16 @@ export default function DashboardWrapper({
             {isWrapperOpen && (
               <div>
                 <Link href="/dashboard" className="flex items-center group animate-in fade-in duration-300">
-                  <span className="font-bold text-lg text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                    FinansialApp
+                  <Image
+                    alt='trafina logo'
+                    src='/logo.png'
+                    width={20}
+                    height={20}
+                  />
+                  <span className="mt-2 font-bold text-lg text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                    rafina
                   </span>
                 </Link>
-                {organization && (
-                  <div className="">
-                    <span className="inline-flex items-center rounded-full bg-slate-100/80 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-slate-700 border border-slate-200/80 shadow-xs">
-                      {organization.name}
-                    </span>
-                  </div>
-                )}
               </div>
             )}
             {/* Tombol Toggle Wrapper (Desktop only or close for mobile) */}
