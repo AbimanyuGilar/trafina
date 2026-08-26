@@ -4,10 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { 
   ArrowLeft,
-  Mail, 
   Phone, 
   MapPin, 
-  Globe, 
   Calendar, 
   Edit3, 
   Trash2, 
@@ -125,57 +123,31 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Kontak & Lokasi */}
-          {(companyData.metadata.email || companyData.metadata.phone || companyData.metadata.website) && (
+          {companyData.metadata?.phone && (
             <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
               <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
                 Informasi Kontak
               </h2>
               <div className="space-y-3.5 text-sm">
-                {companyData.metadata.email && (
-                  <div className="flex items-start gap-3">
-                    <Mail size={18} className="text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Email Resmi</p>
-                      <a href={`mailto:${companyData.metadata.email}`} className="text-blue-600 hover:underline font-medium">
-                        {companyData.metadata.email}
-                      </a>
-                    </div>
+                <div className="flex items-start gap-3">
+                  <Phone size={18} className="text-slate-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
+                    <p className="text-slate-800 font-medium">{companyData.metadata.phone}</p>
                   </div>
-                )}
-
-                {companyData.metadata.phone && (
-                  <div className="flex items-start gap-3">
-                    <Phone size={18} className="text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
-                      <p className="text-slate-800 font-medium">{companyData.metadata.phone}</p>
-                    </div>
-                  </div>
-                )}
-
-                {companyData.metadata.website && (
-                  <div className="flex items-start gap-3">
-                    <Globe size={18} className="text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Situs Web</p>
-                      <a href={companyData.metadata.website} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
-                        {companyData.metadata.website}
-                      </a>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           )}
 
           {/* Alamat & Sistem */}
-          {(companyData.metadata.address || companyData.createdAt) && (
+          {(companyData.metadata?.address || companyData.createdAt) && (
             <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
               <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
                 Alamat & Registrasi
               </h2>
               <div className="space-y-3.5 text-sm">
-                {companyData.metadata.address && (
+                {companyData.metadata?.address && (
                   <div className="flex items-start gap-3">
                     <MapPin size={18} className="text-slate-400 mt-0.5" />
                     <div>

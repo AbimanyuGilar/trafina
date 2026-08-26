@@ -4,9 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Mail, 
   Phone, 
-  Globe,
   Save, 
   X 
 } from 'lucide-react'
@@ -18,25 +16,17 @@ export default function EditCompanyForm({ userId, companyData }: { userId: strin
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
-  console.log(companyData)
-
   // State untuk data form
   const [formData, setFormData] = useState({
     name: companyData.name,
-    email: companyData.metadata.email,
-    phone: companyData.metadata.phone,
-    website: companyData.metadata.website,
-    address: companyData.metadata.address,
-    description: '',
+    phone: companyData.metadata?.phone || '',
+    address: companyData.metadata?.address || '',
   })
 
   const oldFormData = {
     name: companyData.name,
-    email: companyData.metadata.email,
-    phone: companyData.metadata.phone,
-    website: companyData.metadata.website,
-    address: companyData.metadata.address,
-    description: '',
+    phone: companyData.metadata?.phone || '',
+    address: companyData.metadata?.address || '',
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -48,22 +38,17 @@ export default function EditCompanyForm({ userId, companyData }: { userId: strin
     e.preventDefault()
     setIsLoading(true)
 
-    const { name, email, phone, website, address, description } = formData
+    const { name, phone, address } = formData
 
     const slug = (name !== oldFormData.name) ? generateUniqueSlug(name) : companyData.slug
-
-    console.log(slug)
 
     const { data, error } = await authClient.organization.update({
       data: {
         name,
         slug,
         metadata: {
-          email,
           phone,
-          website,
           address,
-          description
         },
       },
       organizationId: companyData.id
@@ -113,28 +98,9 @@ export default function EditCompanyForm({ userId, companyData }: { userId: strin
             </span>
             <div className="flex-1 border-t border-slate-200" />
           </div>
+          
           <div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                  Email Resmi
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="kontak@toko.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
-                  />
-                  <Mail size={16} className="absolute left-3 top-2.5 text-slate-400" />
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Telepon */}
               <div className="space-y-1.5">
                 <label htmlFor="phone" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
@@ -151,25 +117,6 @@ export default function EditCompanyForm({ userId, companyData }: { userId: strin
                     className="w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                   <Phone size={16} className="absolute left-3 top-2.5 text-slate-400" />
-                </div>
-              </div>
-
-              {/* Website */}
-              <div className="space-y-1.5">
-                <label htmlFor="website" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                  Situs Web
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="website"
-                    name="website"
-                    placeholder="https://toko.com"
-                    value={formData.website}
-                    onChange={handleChange}
-                    className="w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
-                  />
-                  <Globe size={16} className="absolute left-3 top-2.5 text-slate-400" />
                 </div>
               </div>
             </div>
