@@ -24,7 +24,7 @@ const EditCompanyPage = async ({ params }: { params: Promise<{ slug: string }> }
           </Link>
           <div className='flex items-center'>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">
-              Edit Perusahaan
+              Edit Toko
             </h1>
             <Building2 size={18} className="text-blue-600 ml-4" />
           </div>

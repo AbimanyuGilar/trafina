@@ -25,7 +25,7 @@ const Dashboard = async () => {
   if (userRole === 'USER') {
     const activeCompany = await getFullOrganization()
     if (!activeCompany) {
-      redirect('/dashboard/com')
+      redirect('/dashboard/store')
     }
 
     // Fetch transactions to calculate statistics

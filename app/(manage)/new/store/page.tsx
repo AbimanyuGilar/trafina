@@ -6,7 +6,7 @@ import { ArrowLeft, Building2 } from 'lucide-react'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: "Trafina - Usaha baru",
+  title: "Trafina - Toko Baru",
 }
 
 const page = async () => {
@@ -28,7 +28,7 @@ const page = async () => {
           </Link>
           <div className='flex items-center'>
             <h1 className="text-xl font-bold tracking-tight text-slate-900">
-              Tambah Perusahaan
+              Tambah Toko
             </h1>
             <Building2 size={18} className="text-blue-600 ml-4" />
           </div>

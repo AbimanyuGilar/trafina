@@ -58,11 +58,11 @@ export const auth = betterAuth({
     nextCookies(),
     organization({
       async sendInvitationEmail(data) {
-        const url = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}/com/${data.organization.slug}`;
+        const url = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}/store/${data.organization.slug}`;
         sendMail({
           to: data.email,
           from: 'FinansialApp <gilarwaluyo@gmail.com>',
-          subject: 'Undangan Perusahaan',
+          subject: 'Undangan Toko',
           html: getInvitationHTML({ url, org: data.organization.name })
         });
       },

@@ -24,9 +24,9 @@ export async function checkOrganization(organizationId: string) {
     headers: await headers()
   })
 
-  if (!org) redirect('/dashboard/com')
+  if (!org) redirect('/dashboard/store')
 
-  if (org.id !== organizationId) redirect('/dashboard/com')
+  if (org.id !== organizationId) redirect('/dashboard/store')
 
   return org
 }
@@ -36,7 +36,7 @@ export async function requireOrganization() {
     headers: await headers()
   })
 
-  if (!org) redirect('/dashboard/com')
+  if (!org) redirect('/dashboard/store')
   
   return org
 }

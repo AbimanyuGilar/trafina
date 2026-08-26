@@ -19,7 +19,7 @@ export default function CompanyPage ({ companies, activeCompany }: { companies: 
     });
     
     if (error) {
-      toast.error(error.message || "Gagal memilih perusahaan");
+      toast.error(error.message || "Gagal memilih toko");
       NProgress.done();
       return;
     }
@@ -33,26 +33,26 @@ export default function CompanyPage ({ companies, activeCompany }: { companies: 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            Pilih Perusahaan
+            Pilih Toko
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Pilih salah satu perusahaan untuk mengelola dashboard Anda
+            Pilih salah satu toko untuk mengelola dashboard Anda
           </p>
         </div>
 
         {/* Action Button */}
         <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
           <Plus size={18} strokeWidth={2} />
-          <Link href="/new/company">Tambah Perusahaan</Link>
+          <Link href="/new/store">Tambah Toko</Link>
         </button>
       </div>
 
-      {/* List Perusahaan */}
+      {/* List Toko */}
       {
         (
           companies?.length === 0
           ?
-          <p className='text-slate-500 text-center'>Belum ada perusahaan.</p>
+          <p className='text-slate-500 text-center'>Belum ada toko.</p>
           :
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {

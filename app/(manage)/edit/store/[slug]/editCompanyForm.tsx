@@ -13,22 +13,31 @@ import {
 import { authClient } from '@/lib/auth-client'
 import { generateUniqueSlug } from '@/lib/generate-slug'
 import { toast } from 'sonner'
-import NProgress from 'nprogress'
-import { createInitialData } from './actions'
 
-export default function NewCompanyForm({ userId }: { userId: string }) {
+export default function EditCompanyForm({ userId, companyData }: { userId: string, companyData: any }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
+  console.log(companyData)
+
   // State untuk data form
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    website: '',
-    address: '',
+    name: companyData.name,
+    email: companyData.metadata.email,
+    phone: companyData.metadata.phone,
+    website: companyData.metadata.website,
+    address: companyData.metadata.address,
     description: '',
   })
+
+  const oldFormData = {
+    name: companyData.name,
+    email: companyData.metadata.email,
+    phone: companyData.metadata.phone,
+    website: companyData.metadata.website,
+    address: companyData.metadata.address,
+    description: '',
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -40,30 +49,31 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
     setIsLoading(true)
 
     const { name, email, phone, website, address, description } = formData
-    const slug = generateUniqueSlug(name)
 
-    const { data, error } = await authClient.organization.create({
-      name,
-      slug,
-      metadata: {
-        email,
-        phone,
-        website,
-        address,
-        description
+    const slug = (name !== oldFormData.name) ? generateUniqueSlug(name) : companyData.slug
+
+    console.log(slug)
+
+    const { data, error } = await authClient.organization.update({
+      data: {
+        name,
+        slug,
+        metadata: {
+          email,
+          phone,
+          website,
+          address,
+          description
+        },
       },
-      userId,
-      keepCurrentActiveOrganization: false,
+      organizationId: companyData.id
     });
     
     if (error) {
       toast.error(error.message)
     } else {
-      await createInitialData(data)
-      toast.success("Perusahaan berhasil ditambahkan")
-
-      NProgress.start()
-      router.push(`/dashboard`)
+      toast.success("Toko berhasil diperbarui")
+      router.push(`/dashboard/store/${slug}`)
     }
 
     setIsLoading(false)
@@ -77,17 +87,17 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
           {/* Section: Informasi Utama */}
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nama Perusahaan */}
+              {/* Nama Toko */}
               <div className="space-y-1.5">
                 <label htmlFor="name" className="block text-xs font-semibold text-slate-700 uppercase tracking-wide">
-                  Nama Perusahaan <span className="text-rose-500">*</span>
+                  Nama Toko <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   id="name"
                   name="name"
                   required
-                  placeholder="Contoh: PT Nusantara Maju"
+                  placeholder="Contoh: Toko Berkah Jaya"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
@@ -116,7 +126,7 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="kontak@perusahaan.com"
+                    placeholder="kontak@toko.com"
                     value={formData.email}
                     onChange={handleChange}
                     className="w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
@@ -154,7 +164,7 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
                     type="text"
                     id="website"
                     name="website"
-                    placeholder="https://perusahaan.com"
+                    placeholder="https://toko.com"
                     value={formData.website}
                     onChange={handleChange}
                     className="w-full pl-9 pr-3.5 py-2 text-sm bg-white border border-slate-200 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
@@ -200,7 +210,7 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
           >
             <Save size={16} />
-            <span>{isLoading ? 'Menyimpan...' : 'Simpan Perusahaan'}</span>
+            <span>{isLoading ? 'Menyimpan...' : 'Simpan Toko'}</span>
           </button>
         </div>
       </form>

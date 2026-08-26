@@ -43,12 +43,12 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
       organizationId: null,
     });
 
-    window.location.href = '/dashboard/com'
+    window.location.href = '/dashboard/store'
   }
 
   return (
     <div className="w-full space-y-6">
-      <DeleteCard isLoading={isDeleteting} isOpen={showDeleteCard} onClose={() => setShowDeleteCard(false)} description={'Apakah anda yakin ingin menghapus perusahaan ini?'} onConfirm={() => deleteCompany(companyData.id)} />
+      <DeleteCard isLoading={isDeleteting} isOpen={showDeleteCard} onClose={() => setShowDeleteCard(false)} description={'Apakah anda yakin ingin menghapus toko ini?'} onConfirm={() => deleteCompany(companyData.id)} />
       {/* 1. Header Navigation & Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
@@ -71,7 +71,7 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
-          <Link href={`/edit/company/${companyData.slug}`} className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all cursor-pointer">
+          <Link href={`/edit/store/${companyData.slug}`} className="inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm transition-all cursor-pointer">
             <Edit3 size={16} strokeWidth={1.75} />
             <span>Edit</span>
           </Link>
@@ -211,7 +211,7 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
       {/* Tab Content: Aktivitas */}
       {activeTab === 'activity' && (
         <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm text-center py-12">
-          <p className="text-sm text-slate-500">Belum ada riwayat aktivitas untuk perusahaan ini.</p>
+          <p className="text-sm text-slate-500">Belum ada riwayat aktivitas untuk toko ini.</p>
         </div>
       )}
     </div>

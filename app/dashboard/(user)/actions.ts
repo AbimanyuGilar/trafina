@@ -15,7 +15,7 @@ export async function addTransactionDashboard(data: {
   if (!org) {
     return {
       success: false,
-      message: 'Gagal membuat transaksi: Perusahaan aktif tidak ditemukan.'
+      message: 'Gagal membuat transaksi: Toko aktif tidak ditemukan.'
     }
   }
 

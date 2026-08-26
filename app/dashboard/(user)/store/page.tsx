@@ -4,7 +4,7 @@ import { requireRoles } from "@/lib/auth-guard";
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: "Trafina - Usaha",
+  title: "Trafina - Toko",
 }
 
 const page = async () => {

@@ -40,20 +40,20 @@ export default async function DashboardWrapper({
       ]
     },
     {
-      label: "Perusahaan",
+      label: "Toko",
       roles: ["USER"],
       icon: "Building2",
       requiredOrganization: false,
       children: [
         {
-          label: "Daftar Perusahaan", 
-          href: "/dashboard/com",
+          label: "Daftar Toko", 
+          href: "/dashboard/store",
           roles: ["USER"],
           requiredOrganization: false,
         },
         {
-          label: "Perusahaan Saat Ini", 
-          href: `/dashboard/com/${organization?.slug}`,
+          label: "Toko Saat Ini", 
+          href: `/dashboard/store/${organization?.slug}`,
           roles: ["USER"],
           requiredOrganization: true,
         },
@@ -68,28 +68,28 @@ export default async function DashboardWrapper({
       children: [
         {
           label: "Kasir", 
-          href: `/dashboard/com/${organization?.slug}/cashier`,
+          href: `/dashboard/store/${organization?.slug}/cashier`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_cashier",
         },
         {
           label: "Transaksi Manual", 
-          href: `/dashboard/com/${organization?.slug}/manual-transaction`,
+          href: `/dashboard/store/${organization?.slug}/manual-transaction`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_manual_transaction",
         },
         {
           label: "Metode Transaksi", 
-          href: `/dashboard/com/${organization?.slug}/transaction-method`,
+          href: `/dashboard/store/${organization?.slug}/transaction-method`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_transaction_method",
         },
         {
           label: "Riwayat Transaksi", 
-          href: `/dashboard/com/${organization?.slug}/transaction-history`,
+          href: `/dashboard/store/${organization?.slug}/transaction-history`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_transaction_history",
@@ -104,14 +104,14 @@ export default async function DashboardWrapper({
       children: [
         {
           label: "Produk", 
-          href: `/dashboard/com/${organization?.slug}/product`,
+          href: `/dashboard/store/${organization?.slug}/product`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_products",
         },
         {
           label: "Karyawan", 
-          href: `/dashboard/com/${organization?.slug}/staff`,
+          href: `/dashboard/store/${organization?.slug}/staff`,
           roles: ["USER"],
           requiredOrganization: true,
           permission: "manage_staffs",

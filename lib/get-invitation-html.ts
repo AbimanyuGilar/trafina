@@ -33,7 +33,7 @@ export function getInvitationHTML({url, org}: InvitationTypes) {
       </head>
       <body>
         <div class="container">
-          <h2>Anda telah menerima undangan dari perusahaan ${org}</h2>
+          <h2>Anda telah menerima undangan dari toko ${org}</h2>
           <p>Silakan klik tombol di bawah untuk menerima undangan dan bergabung dengan ${org}</p>
           
           <!-- Tombol Menggunakan Hex dari blue-600 -->

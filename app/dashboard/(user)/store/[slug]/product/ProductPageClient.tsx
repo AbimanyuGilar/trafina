@@ -641,7 +641,7 @@ export default function ProductPageClient({
               <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                 <div className="text-left">
                   <label className="block text-sm font-semibold text-slate-700">Aktifkan Stok</label>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Nonaktifkan untuk usaha seperti restoran yang tidak perlu tracking stok</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Nonaktifkan untuk toko seperti restoran yang tidak perlu tracking stok</p>
                 </div>
                 <button
                   type="button"

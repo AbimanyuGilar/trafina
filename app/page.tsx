@@ -206,7 +206,7 @@ export default function HomePage() {
             <div className="lg:col-span-6 text-left space-y-6">
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1]">
-                Satu Aplikasi Kasir untuk <span className="text-blue-600">Semua Jenis Usaha</span>
+                Satu Aplikasi Kasir untuk <span className="text-blue-600">Semua Jenis Toko</span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-xl leading-relaxed">
@@ -233,7 +233,7 @@ export default function HomePage() {
               {/* Business Categories Supported */}
               <div id="solusi" className="pt-6 border-t border-slate-200">
                 <p className="text-xs font-medium tracking-wider text-slate-500 mb-3">
-                  Cocok untuk berbagai sektor usaha:
+                  Cocok untuk berbagai sektor toko:
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {businessTypes.map((item, idx) => {
@@ -396,10 +396,10 @@ export default function HomePage() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 blur-[70px] pointer-events-none" />
             
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-4 max-w-2xl mx-auto">
-              Mulai Digitalisasi Usaha Anda Bersama Trafina Hari Ini
+              Mulai Digitalisasi Toko Anda Bersama Trafina Hari Ini
             </h2>
             <p className="text-blue-100 text-base max-w-xl mx-auto mb-8 leading-relaxed">
-              Daftarkan usaha Anda sekarang dan rasakan kemudahan transaksi kasir serta pencatatan otomatis yang rapi.
+              Daftarkan toko Anda sekarang dan rasakan kemudahan transaksi kasir serta pencatatan otomatis yang rapi.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

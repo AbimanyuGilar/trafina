@@ -117,7 +117,7 @@ export default function RegisterForm() {
               required
               value={formData.email}
               onChange={handleChange}
-              placeholder="nama@perusahaan.com"
+              placeholder="nama@toko.com"
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
             />
           </div>

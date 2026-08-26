@@ -14,7 +14,7 @@ const page = async ({params}: {params: Promise<{ orgSlug: string, id: string }>}
       headers: await headers(),
   });
 
-  redirect(`/dashboard/com/${orgSlug}`)
+  redirect(`/dashboard/store/${orgSlug}`)
 }
 
 export default page
