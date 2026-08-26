@@ -1,9 +1,12 @@
 import Link from 'next/link';
-import RegisterForm from './RegisterForm';
+import RegisterForm from './RegisterForm';import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Trafina - Daftar",
+}
 
 export default function RegisterPage() {
   
-
   return (
     <>
       <div className="mb-8 text-left">

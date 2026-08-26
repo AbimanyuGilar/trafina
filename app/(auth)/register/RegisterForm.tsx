@@ -72,7 +72,13 @@ export default function RegisterForm() {
       <form onSubmit={handleSubmit} className="space-y-4" method='POST'>
         {
           registerResult && (
-            <div className={"text-center rounded-md p-2 text-sm " + (registerResult.success ? "bg-green-200 text-green-500" : "text-red-500 bg-red-200")}>{registerResult.message}</div>
+            <div className={`text-left rounded-lg p-3 text-xs font-medium border ${
+              registerResult.success
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}>
+              {registerResult.message}
+            </div>
           )
         }
         {/* Input Nama Lengkap */}

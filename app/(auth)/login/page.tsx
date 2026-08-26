@@ -3,8 +3,7 @@ import LoginForm from './LoginForm';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Login",
-  description: "Login form untuk aplikasi keuangan"
+  title: "Trafina - Login",
 }
 
 export default function LoginPage(): React.ReactElement {

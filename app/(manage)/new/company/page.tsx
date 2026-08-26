@@ -3,6 +3,11 @@ import { requireRoles } from '@/lib/auth-guard'
 import NewCompanyForm from './newCompanyForm'
 import Link from 'next/link'
 import { ArrowLeft, Building2 } from 'lucide-react'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "Trafina - Usaha baru",
+}
 
 const page = async () => {
   const session = await requireRoles(["USER"])

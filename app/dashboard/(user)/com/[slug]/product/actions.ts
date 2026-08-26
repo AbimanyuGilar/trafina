@@ -105,9 +105,9 @@ export async function addProduct(orgId: string, formData: FormData) {
 
   const name = formData.get('name') as string
   const category = formData.get('category') as string
-  const buyPrice = Number(formData.get('buyPrice')) || 0
   const price = Number(formData.get('price')) || 0
-  const unit = (formData.get('unit') as string) || 'pcs'
+  const trackStock = formData.get('trackStock') === 'true'
+  const unit = trackStock ? ((formData.get('unit') as string) || 'pcs') : null
   const stock = Number(formData.get('stock')) || 0
 
   try {
@@ -133,10 +133,10 @@ export async function addProduct(orgId: string, formData: FormData) {
       const product = await tx.product.create({
         data: {
           name: name.trim(),
-          buyPrice,
           price,
-          unit: unit.trim(),
-          stock,
+          unit,
+          stock: trackStock ? stock : 0,
+          trackStock,
           image: filePath,
           organizationId: orgId
         }
@@ -195,9 +195,9 @@ export async function editProduct(orgId: string, productId: string, formData: Fo
 
   const name = formData.get('name') as string
   const category = formData.get('category') as string
-  const buyPrice = Number(formData.get('buyPrice')) || 0
   const price = Number(formData.get('price')) || 0
-  const unit = (formData.get('unit') as string) || 'pcs'
+  const trackStock = formData.get('trackStock') === 'true'
+  const unit = trackStock ? ((formData.get('unit') as string) || 'pcs') : null
   const stock = Number(formData.get('stock')) || 0
 
   try {
@@ -225,17 +225,17 @@ export async function editProduct(orgId: string, productId: string, formData: Fo
 
       const updateData: {
         name: string
-        buyPrice: number
         price: number
-        unit: string
+        unit: string | null
         stock: number
+        trackStock: boolean
         image?: string | null
       } = {
         name: name.trim(),
-        buyPrice,
         price,
-        unit: unit.trim(),
-        stock
+        unit,
+        stock: trackStock ? stock : 0,
+        trackStock
       }
 
       if (filePath) {

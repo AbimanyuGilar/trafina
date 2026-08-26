@@ -29,6 +29,13 @@ export async function createTransaction({ products, paymentMethod }: { products:
       })
   
       for (const product of products) {
+        const dbProduct = await tx.product.findUnique({
+          where: { id: product.id },
+          select: { trackStock: true }
+        });
+
+        if (!dbProduct?.trackStock) continue;
+
         const result = await tx.product.updateMany({
           where: {
             id: product.id,

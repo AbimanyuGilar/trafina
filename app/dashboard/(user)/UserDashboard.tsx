@@ -61,8 +61,8 @@ export default function Dashboard({
 
   const { income, expense, balance } = getFilteredStats();
 
-  // Ambil produk stok menipis (stok <= 5)
-  const lowStockProducts = products.filter(p => p.stock <= 5);
+  // Ambil produk stok menipis (stok <= 5, hanya yang trackStock aktif)
+  const lowStockProducts = products.filter(p => p.trackStock !== false && p.stock <= 5);
 
   // Ambil produk paling laris (berdasarkan transaksi Kasir)
   const getBestSellingProducts = () => {

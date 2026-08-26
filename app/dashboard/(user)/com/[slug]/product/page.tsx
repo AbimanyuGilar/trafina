@@ -3,6 +3,28 @@ import { requirePermission } from '@/lib/auth-guard'
 import ProductPageClient from './ProductPageClient'
 import prisma from '@/lib/prisma'
 import { redirect } from 'next/navigation'
+import { Metadata } from 'next'
+import { getFullOrganization } from '@/lib/organizations'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+
+  const companyData = await getFullOrganization()
+
+  if (!companyData || companyData.slug !== slug) {
+    return {
+      title: 'Trafinaaaaaaa',
+    }
+  }
+
+  return {
+    title: companyData.name + ' - Produk',
+  }
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

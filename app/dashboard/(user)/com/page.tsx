@@ -1,6 +1,11 @@
 import CompanyPage from "./companyPage";
 import { getFullOrganization, getListOrganization } from "@/lib/organizations";
 import { requireRoles } from "@/lib/auth-guard";
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "Trafina - Usaha",
+}
 
 const page = async () => {
   const session = await requireRoles(['USER'])

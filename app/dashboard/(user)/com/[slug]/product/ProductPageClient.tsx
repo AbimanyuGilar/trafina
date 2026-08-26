@@ -18,9 +18,9 @@ interface ProductWithCategory {
   id: string
   name: string
   price: number
-  buyPrice: number
-  unit: string
+  unit: string | null
   stock: number
+  trackStock: boolean
   image?: string | null
   categories: {
     category: ProductCategory
@@ -84,10 +84,10 @@ export default function ProductPageClient({
   // Form states
   const [name, setName] = useState('')
   const [categoryName, setCategoryName] = useState('')
-  const [buyPrice, setBuyPrice] = useState('')
   const [price, setPrice] = useState('')
   const [unit, setUnit] = useState('pcs')
   const [stock, setStock] = useState('')
+  const [trackStock, setTrackStock] = useState(true)
   const [formImage, setFormImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
@@ -96,10 +96,10 @@ export default function ProductPageClient({
     setCurrentProduct(null)
     setName('')
     setCategoryName(categories[0]?.name || '')
-    setBuyPrice('')
     setPrice('')
     setUnit('pcs')
     setStock('')
+    setTrackStock(true)
     setFormImage(null)
     setImagePreview(null)
     setIsModalOpen(true)
@@ -110,10 +110,10 @@ export default function ProductPageClient({
     setCurrentProduct(product)
     setName(product.name)
     setCategoryName(product.categories[0]?.category.name || '')
-    setBuyPrice(product.buyPrice?.toString() ?? '0')
     setPrice(product.price?.toString() ?? '0')
-    setUnit(product.unit)
+    setUnit(product.unit || '')
     setStock(product.stock?.toString() ?? '0')
+    setTrackStock(product.trackStock)
     setFormImage(null)
     setImagePreview(product.image ? getProductImageUrl(product.image) : null)
     setIsModalOpen(true)
@@ -150,20 +150,19 @@ export default function ProductPageClient({
 
     if (!name.trim()) return toast.error("Nama produk harus diisi")
     if (!categoryName.trim()) return toast.error("Kategori harus diisi")
-    if (!buyPrice || Number(buyPrice) < 0) return toast.error("Harga beli tidak valid")
     if (!price || Number(price) < 0) return toast.error("Harga jual tidak valid")
-    if (!unit.trim()) return toast.error("Satuan harus diisi")
-    if (stock === '' || Number(stock) < 0) return toast.error("Stok tidak valid")
+    if (trackStock && !unit.trim()) return toast.error("Satuan harus diisi")
+    if (trackStock && (stock === '' || Number(stock) < 0)) return toast.error("Stok tidak valid")
 
     setIsSubmitting(true)
 
     const formData = new FormData()
     formData.append('name', name.trim())
     formData.append('category', categoryName.trim())
-    formData.append('buyPrice', buyPrice)
     formData.append('price', price)
-    formData.append('unit', unit.trim())
-    formData.append('stock', stock)
+    formData.append('unit', trackStock ? unit.trim() : '')
+    formData.append('stock', trackStock ? stock : '0')
+    formData.append('trackStock', trackStock.toString())
     if (formImage) {
       formData.append('image', formImage)
     } else if (currentProduct && !imagePreview && currentProduct.image) {
@@ -277,14 +276,14 @@ export default function ProductPageClient({
 
   // Stats
   const totalProducts = initialProducts.length
-  const totalStock = initialProducts.reduce((sum, p) => sum + p.stock, 0)
-  const lowStockCount = initialProducts.filter(p => p.stock <= 5).length
+  const totalStock = initialProducts.filter(p => p.trackStock).reduce((sum, p) => sum + p.stock, 0)
+  const lowStockCount = initialProducts.filter(p => p.trackStock && p.stock <= 5).length
 
   // Filtered Products
   const filteredProducts = initialProducts.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'ALL' || p.categories.some(c => c.category.name === selectedCategory)
-    const matchesLowStock = !showLowStockOnly || p.stock <= 5
+    const matchesLowStock = !showLowStockOnly || (p.trackStock && p.stock <= 5)
     return matchesSearch && matchesCategory && matchesLowStock
   })
 
@@ -410,7 +409,6 @@ export default function ProductPageClient({
                 <tr>
                   <th scope="col" className="px-6 py-4">Produk</th>
                   <th scope="col" className="px-6 py-4">Kategori</th>
-                  <th scope="col" className="px-6 py-4 text-right">Harga Beli</th>
                   <th scope="col" className="px-6 py-4 text-right">Harga Jual</th>
                   <th scope="col" className="px-6 py-4 text-center">Satuan</th>
                   <th scope="col" className="px-6 py-4 text-center">Stok</th>
@@ -419,7 +417,7 @@ export default function ProductPageClient({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredProducts.map((p) => {
-                  const isLowStock = p.stock <= 5
+                  const isLowStock = p.trackStock && p.stock <= 5
                   const categoryName = p.categories[0]?.category.name || 'Umum'
 
                   return (
@@ -442,24 +440,27 @@ export default function ProductPageClient({
                           {categoryName}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-medium text-slate-500">
-                        {formatRupiah(p.buyPrice)}
-                      </td>
                       <td className="px-6 py-4 text-right font-semibold text-slate-900">
                         {formatRupiah(p.price)}
                       </td>
                       <td className="px-6 py-4 text-center font-medium text-slate-500">
-                        {p.unit}
+                        {p.unit || '-'}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                          isLowStock 
-                            ? 'bg-rose-50 text-rose-700 border border-rose-100' 
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                        }`}>
-                          {isLowStock && <AlertTriangle size={12} />}
-                          {p.stock}
-                        </span>
+                        {p.trackStock ? (
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                            isLowStock 
+                              ? 'bg-rose-50 text-rose-700 border border-rose-100' 
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          }`}>
+                            {isLowStock && <AlertTriangle size={12} />}
+                            {p.stock}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                            Nonaktif
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -572,34 +573,22 @@ export default function ProductPageClient({
               </div>
 
               {/* Kategori */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Kategori</label>
-                <Dropdown
-                  options={categories.map((c) => ({
-                    value: c.name,
-                    label: c.name,
-                    key: c.id
-                  }))}
-                  value={categoryName}
-                  onChange={setCategoryName}
-                  placeholder="Pilih Kategori"
-                />
-              </div>
-
-              {/* Harga Beli & Harga Jual */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className='grid grid-cols-2 gap-3'>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Harga Beli (Rp)</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder="0"
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(e.target.value)}
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Kategori</label>
+                  <Dropdown
+                    options={categories.map((c) => ({
+                      value: c.name,
+                      label: c.name,
+                      key: c.id
+                    }))}
+                    value={categoryName}
+                    onChange={setCategoryName}
+                    placeholder="Pilih Kategori"
                     className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
                   />
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Harga Jual (Rp)</label>
                   <input
@@ -614,31 +603,68 @@ export default function ProductPageClient({
                 </div>
               </div>
 
+              {/* Harga Jual */}
+              <div className="grid grid-cols-1 gap-3">
+                
+              </div>
+
               {/* Satuan & Stok */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Satuan</label>
                   <input
                     type="text"
-                    required
-                    placeholder="pcs / kg / box"
+                    required={trackStock}
+                    placeholder={trackStock ? "pcs / kg / box" : "Nonaktif"}
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    disabled={!trackStock}
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Stok Awal</label>
                   <input
                     type="number"
-                    required
                     min="0"
                     placeholder="0"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
-                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all"
+                    disabled={!trackStock}
+                    required={trackStock}
+                    className="w-full px-3.5 py-2 text-sm bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
                   />
                 </div>
+              </div>
+
+              {/* Aktifkan Stok Toggle */}
+              <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="text-left">
+                  <label className="block text-sm font-semibold text-slate-700">Aktifkan Stok</label>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Nonaktifkan untuk usaha seperti restoran yang tidak perlu tracking stok</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !trackStock
+                    setTrackStock(next)
+                    if (!next) {
+                      setUnit('')
+                      setStock('')
+                    } else {
+                      setUnit('pcs')
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    trackStock ? 'bg-blue-600' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      trackStock ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
 
               {/* Action Buttons */}

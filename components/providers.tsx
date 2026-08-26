@@ -19,7 +19,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         zIndex={99999}
       />
       {children}  
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-left" />
     </>
   );
 }

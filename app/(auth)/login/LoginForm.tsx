@@ -57,7 +57,9 @@ const LoginForm = () => {
     <form onSubmit={handleSubmit} className="space-y-4" method="POST">
 			{
 				errorMessage && (
-					<div className={"text-center rounded-md p-2 text-sm text-red-500 bg-red-200"}>{errorMessage}</div>
+					<div className="text-left rounded-lg p-3 text-xs font-medium text-red-700 bg-red-50 border border-red-200">
+						{errorMessage}
+					</div>
 				)
 			}
 			{/* Input Email */}

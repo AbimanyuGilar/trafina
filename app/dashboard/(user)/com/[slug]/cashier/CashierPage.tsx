@@ -132,7 +132,7 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
     const existingIndex = cart.findIndex(item => item.product.id === product.id)
     if (existingIndex > -1) {
       const currentQty = cart[existingIndex].quantity
-      if (currentQty + 1 > product.stock) {
+      if (product.trackStock && currentQty + 1 > product.stock) {
         toast.warning(`Stok ${product.name} tidak mencukupi!`)
         return
       }
@@ -140,7 +140,7 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
       newCart[existingIndex].quantity += 1
       setCart(newCart)
     } else {
-      if (product.stock < 1) {
+      if (product.trackStock && product.stock < 1) {
         toast.warning(`Stok ${product.name} habis!`)
         return
       }
@@ -152,7 +152,7 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
     const existingIndex = cart.findIndex(item => item.product.id === productId)
     if (existingIndex > -1) {
       const item = cart[existingIndex]
-      if (item.quantity + 1 > item.product.stock) {
+      if (item.product.trackStock && item.quantity + 1 > item.product.stock) {
         toast.warning(`Stok ${item.product.name} tidak mencukupi!`)
         return
       }
@@ -486,7 +486,7 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
 
                       <button
                         onClick={() => handleIncrement(item.product.id)}
-                        disabled={item.quantity >= item.product.stock}
+                        disabled={item.product.trackStock && item.quantity >= item.product.stock}
                         className="w-6 h-6 rounded-md bg-white border border-slate-200/80 hover:bg-slate-100 active:scale-95 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all cursor-pointer shadow-2xs"
                         aria-label="Tambah jumlah"
                       >
@@ -711,8 +711,8 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
               {filteredProducts.map((product) => {
                 const cartItem = cart.find(item => item.product.id === product.id)
                 const quantityInCart = cartItem ? cartItem.quantity : 0
-                const isOutOfStock = product.stock <= 0
-                const isLowStock = product.stock > 0 && product.stock <= 5
+                const isOutOfStock = product.trackStock && product.stock <= 0
+                const isLowStock = product.trackStock && product.stock > 0 && product.stock <= 5
 
                 return (
                   <div
@@ -771,13 +771,15 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
                           {formatRupiah(product.price)}
                         </span>
                         <span className={`text-[11px] mt-0.5 block ${
-                          isOutOfStock
+                          !product.trackStock
+                            ? 'text-slate-400'
+                            : isOutOfStock
                             ? 'text-rose-600 font-semibold'
                             : isLowStock
                             ? 'text-amber-600 font-medium'
                             : 'text-slate-400'
                         }`}>
-                          {isOutOfStock ? 'Stok Habis' : `Stok: ${product.stock}`}
+                          {!product.trackStock ? '' : isOutOfStock ? 'Stok Habis' : `Stok: ${product.stock}`}
                         </span>
                       </div>
 
