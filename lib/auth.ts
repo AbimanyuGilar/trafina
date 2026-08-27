@@ -8,6 +8,7 @@ import { sendMail } from "./email";
 import { getVerificationEmailHTML } from "./get-verification-email-html";
 import { organization } from "better-auth/plugins";
 import { getInvitationHTML } from "./get-invitation-html";
+import { getResetPasswordHTML } from "./get-reset-password-html";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter });
@@ -27,7 +28,21 @@ export const auth = betterAuth({
           text: 'Seseorang mencoba mendaftar dengan email Anda. Jika ini adalah Anda, silahkan login.'
         })
       )
-    }
+    },
+    sendResetPassword: async ({user, url, token}, request) => {
+      waitUntil(
+        sendMail({
+          from: 'Trafina <trafinaapp26@gmail.com>',
+          to: user.email,
+          subject: 'Reset password.',
+          html: getResetPasswordHTML(`${process.env.BETTER_AUTH_URL}/reset-password/${token}?callbackURL=${process.env.BETTER_AUTH_URL}/login`, user.name)
+        })
+      ) 
+    },
+    onPasswordReset: async ({ user }, request) => {
+      // your logic here
+      console.log(`Password for user ${user.email} has been reset.`);
+    },
   },
   user: {
     additionalFields: {
@@ -52,7 +67,7 @@ export const auth = betterAuth({
           html: getVerificationEmailHTML(verificationUrl.toString(), user.name)
         })
       )
-    }
+    },
   },
   plugins: [
     nextCookies(),
