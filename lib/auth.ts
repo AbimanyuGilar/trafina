@@ -21,7 +21,7 @@ export const auth = betterAuth({
     onExistingUserSignUp: async ({ user }) => {
       waitUntil(                                                                                                   
         sendMail({
-          from: 'FinansialApp <gilarwaluyo@gmail.com>',
+          from: 'Trafina <trafinaapp26@gmail.com>',
           to: user.email,
           subject: 'Verify your email address.',
           text: 'Seseorang mencoba mendaftar dengan email Anda. Jika ini adalah Anda, silahkan login.'
@@ -46,7 +46,7 @@ export const auth = betterAuth({
 
       waitUntil(                                                                                                   
         sendMail({
-          from: 'FinansialApp <gilarwaluyo@gmail.com>',
+          from: 'Trafina <trafinaapp26@gmail.com>',
           to: user.email,
           subject: 'Verifikasi Alamat Email.',
           html: getVerificationEmailHTML(verificationUrl.toString(), user.name)
@@ -61,7 +61,7 @@ export const auth = betterAuth({
         const url = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}/store/${data.organization.slug}`;
         sendMail({
           to: data.email,
-          from: 'FinansialApp <gilarwaluyo@gmail.com>',
+          from: 'Trafina <trafinaapp26@gmail.com>',
           subject: 'Undangan Toko',
           html: getInvitationHTML({ url, org: data.organization.name })
         });
