@@ -404,9 +404,19 @@ export default function DashboardWrapper({
             >
               <Menu size={20} strokeWidth={1.75} />
             </button>
-            <span className="font-bold text-lg text-slate-900 tracking-tight">
-              FinansialApp
-            </span>
+            <div className="flex items-center">
+              <Image
+                alt='trafina logo'
+                src='/logo.png'
+                width={20}
+                height={20}
+                className="h-max"
+              />
+              <span className="font-bold text-lg text-slate-900 tracking-tight mt-2">
+                rafina
+              </span>
+            </div>
+            
           </div>
 
           {/* Dropdown Profil di Mobile */}
