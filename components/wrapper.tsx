@@ -94,7 +94,7 @@ export default function DashboardWrapper({
   const handleLogout = async () => {
     try {
       await authClient.signOut();
-      router.push("/login");
+      window.location.href = '/login'
     } catch (error) {
       console.error("Gagal melakukan logout:", error);
     }

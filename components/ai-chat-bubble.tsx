@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Loader2, Sparkles, User, Minimize2 } from 'lucide-react';
 import { askGeminiAction } from '@/lib/ai/chat';
+import { checkActiveOrganizationAction } from '@/lib/ai/actions';
 
 interface Message {
   id: string;
@@ -117,6 +118,7 @@ function MarkdownRenderer({ content }: { content: string }) {
 }
 
 export default function AIChatBubble() {
+  const [hasActiveOrg, setHasActiveOrg] = useState<boolean | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,6 +130,14 @@ export default function AIChatBubble() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
+
+  useEffect(() => {
+    async function verifyOrganization() {
+      const active = await checkActiveOrganizationAction();
+      setHasActiveOrg(active);
+    }
+    verifyOrganization();
+  }, []);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -188,6 +198,10 @@ export default function AIChatBubble() {
       setLoading(false);
     }
   };
+
+  if (!hasActiveOrg) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
