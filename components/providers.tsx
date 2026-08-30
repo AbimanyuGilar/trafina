@@ -2,6 +2,7 @@
 
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from "sonner";
+import AIChatBubble from "./ai-chat-bubble";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         zIndex={99999}
       />
       {children}  
+      <AIChatBubble />
       <Toaster richColors position="top-left" />
     </>
   );
