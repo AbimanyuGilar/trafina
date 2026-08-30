@@ -204,12 +204,12 @@ export default function AIChatBubble() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
       {/* Modal Dialog Chat */}
       {isOpen && (
-        <div className="mb-4 w-[360px] sm:w-[400px] h-[520px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed inset-0 sm:inset-auto sm:mb-4 w-full h-full sm:w-[400px] sm:h-[520px] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-gray-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 z-50">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex items-center justify-between shadow-sm">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex items-center justify-between shadow-sm shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
                 <Sparkles className="w-5 h-5" />
@@ -220,10 +220,11 @@ export default function AIChatBubble() {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-white/20 transition text-white/90 hover:text-white"
+              className="p-2 rounded-lg hover:bg-white/20 transition text-white/90 hover:text-white cursor-pointer"
               title="Tutup Chat"
             >
-              <Minimize2 className="w-4 h-4" />
+              <X className="w-5 h-5 sm:hidden" />
+              <Minimize2 className="w-4 h-4 hidden sm:block" />
             </button>
           </div>
 
@@ -232,7 +233,7 @@ export default function AIChatBubble() {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-2.5 max-w-[85%] ${
+                className={`flex gap-2.5 max-w-[88%] sm:max-w-[85%] ${
                   msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
                 }`}
               >
@@ -288,20 +289,20 @@ export default function AIChatBubble() {
           {/* Form Input */}
           <form
             onSubmit={handleSend}
-            className="p-3 bg-white border-t border-gray-100 flex items-center gap-2"
+            className="p-3 bg-white border-t border-gray-100 flex items-center gap-2 shrink-0 pb-safe"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Tanyakan sesuatu ke AI..."
-              className="flex-1 px-3.5 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-gray-800 placeholder-gray-400"
+              className="flex-1 px-3.5 py-2.5 sm:py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-gray-800 placeholder-gray-400"
               disabled={loading}
             />
             <button
               type="submit"
               disabled={!input.trim() || loading}
-              className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-xl transition shadow-sm flex items-center justify-center shrink-0"
+              className="p-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 text-white rounded-xl transition shadow-sm flex items-center justify-center shrink-0 cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -320,7 +321,6 @@ export default function AIChatBubble() {
         ) : (
           <>
             <Bot className="w-6 h-6 transition-transform duration-200" />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></span>
           </>
         )}
       </button>
