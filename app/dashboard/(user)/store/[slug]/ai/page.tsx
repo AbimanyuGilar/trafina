@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from "react"
-import { askGeminiAction } from "@/lib/ai/chat"
+import { askAiAction } from "@/lib/ai/chat"
 
 const page = () => {
   const [prompt, setPrompt] = useState('')

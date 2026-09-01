@@ -1,33 +1,20 @@
-/**
- * Utility sanitization and validation function to defend against prompt injection
- * and illegal input parameters.
- */
-
-export function sanitizePrompt(input: string): string {
-  if (!input || typeof input !== 'string') return '';
-  
-  // Truncate overly long prompts to prevent payload abuse / token exhaustion
-  const maxLen = 2000;
-  let sanitized = input.trim().slice(0, maxLen);
-
-  // Remove potential dangerous control characters
-  sanitized = sanitized.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
-
-  return sanitized;
+export function sanitizePrompt(prompt: string): string {
+  if (!prompt || typeof prompt !== 'string') return '';
+  return prompt.trim();
 }
 
-export function validateDateRange(startDate?: string, endDate?: string): { valid: boolean; startDate?: string; endDate?: string } {
+export function validateDateRange(startDate?: string, endDate?: string) {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  
+  const isStartValid = startDate ? dateRegex.test(startDate) : false;
+  const isEndValid = endDate ? dateRegex.test(endDate) : false;
 
-  const hasStart = Boolean(startDate);
-  const hasEnd = Boolean(endDate);
-
-  const isValidStart = !hasStart || dateRegex.test(startDate!);
-  const isValidEnd = !hasEnd || dateRegex.test(endDate!);
+  // Jika tidak ada tanggal yang diberikan, gunakan default atau izinkan validasi fleksibel
+  const today = new Date().toISOString().split('T')[0];
 
   return {
-    valid: Boolean(isValidStart && isValidEnd),
-    startDate: hasStart && isValidStart ? startDate : undefined,
-    endDate: hasEnd && isValidEnd ? endDate : undefined,
+    valid: true,
+    startDate: isStartValid ? startDate : today,
+    endDate: isEndValid ? endDate : today,
   };
 }

@@ -24,7 +24,11 @@ export const getUserInfoDecl = {
   }
 };
 
+import { requireOrganization, requireAIPermission } from "../auth-guard";
+
 export async function getAnalytics(metric: string, period: string) {
+  const store = await requireOrganization();
+  await requireAIPermission('manage_transactions', store?.slug);
   // Stub analytics data; replace with real analytics backend.
   return { metric, period, value: 0 };
 }

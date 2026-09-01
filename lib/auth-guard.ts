@@ -41,6 +41,53 @@ export async function requireOrganization() {
   return org
 }
 
+export class PermissionError extends Error {
+  constructor(message = "maaf anda tidak memiliki wewenang untuk mengakses data terkait") {
+    super(message);
+    this.name = "PermissionError";
+  }
+}
+
+export async function checkPermission(permissionName: string, organizationSlug?: string) {
+  if (!organizationSlug) return false;
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!session) return false;
+
+  const member = await prisma.member.findFirst({
+    where: {
+      userId: session.user.id,
+      organization: {
+        slug: organizationSlug,
+      },
+    },
+    include: {
+      permissions: {
+        include: {
+          permission: true,
+        },
+      },
+    },
+  });
+
+  if (!member) return false;
+  if (member.role === 'owner') return true;
+
+  return member.permissions.some(p => p.permission.name === permissionName);
+}
+
+export async function requireAIPermission(permissionName: string, organizationSlug?: string) {
+  if (!organizationSlug) {
+    throw new PermissionError("maaf anda tidak memiliki wewenang untuk mengakses data terkait");
+  }
+  const hasPermission = await checkPermission(permissionName, organizationSlug);
+  if (!hasPermission) {
+    throw new PermissionError("maaf anda tidak memiliki wewenang untuk mengakses data terkait");
+  }
+}
+
 export async function requirePermission(permissionName: string, organizationSlug: string) {
   const session = await auth.api.getSession({
     headers: await headers()

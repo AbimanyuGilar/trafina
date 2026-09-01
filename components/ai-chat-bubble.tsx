@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Loader2, Sparkles, User, Minimize2 } from 'lucide-react';
-import { askGeminiAction } from '@/lib/ai/chat';
+import { askAiAction } from '@/lib/ai/chat';
 import { checkActiveOrganizationAction } from '@/lib/ai/actions';
 
 interface Message {
@@ -176,7 +176,7 @@ export default function AIChatBubble() {
           text: m.text,
         }));
 
-      const response = await askGeminiAction(trimmedInput, history);
+      const response = await askAiAction(trimmedInput, history);
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',

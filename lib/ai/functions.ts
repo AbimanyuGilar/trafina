@@ -1,10 +1,10 @@
 import prisma from "../prisma"
-import { requireOrganization, requirePermission } from "../auth-guard"
+import { requireOrganization, requireAIPermission } from "../auth-guard"
 
 export async function getSalesFromDB(startDate?: string, endDate?: string, isAllTime?: boolean) {
   const store = await requireOrganization()
 
-  await requirePermission('manage_transactions', store?.slug)
+  await requireAIPermission('manage_transactions', store?.slug)
 
   const whereClause: any = {
     organizationId: store?.id,
@@ -36,7 +36,7 @@ export async function getSalesFromDB(startDate?: string, endDate?: string, isAll
 
 export async function getProductsFromDB() {
   const store = await requireOrganization()
-  await requirePermission('manage_products', store?.slug)
+  await requireAIPermission('manage_products', store?.slug)
 
   const [products, categories] = await Promise.all([
     prisma.product.findMany({
@@ -54,7 +54,7 @@ export async function getProductsFromDB() {
 
 export async function getStaffFromDB() {
   const store = await requireOrganization()
-  await requirePermission('manage_staff', store?.slug)
+  await requireAIPermission('manage_staff', store?.slug)
 
   const members = await prisma.member.findMany({
     where: { organizationId: store?.id },
@@ -79,7 +79,7 @@ export async function getStaffFromDB() {
 
 export async function getTransactionsFromDB() {
   const store = await requireOrganization()
-  await requirePermission('manage_transactions', store?.slug)
+  await requireAIPermission('manage_transactions', store?.slug)
 
   const transactions = await prisma.transaction.findMany({
     where: { organizationId: store?.id },
@@ -101,7 +101,7 @@ export async function getTransactionsFromDB() {
 
 export async function getPaymentMethodsFromDB() {
   const store = await requireOrganization()
-  await requirePermission('manage_transaction_method', store?.slug)
+  await requireAIPermission('manage_transaction_method', store?.slug)
 
   const paymentMethods = await prisma.paymentMethod.findMany({
     where: { organizationId: store?.id },
@@ -113,7 +113,7 @@ export async function getPaymentMethodsFromDB() {
 
 export async function getUserInfoFromDB(query: string) {
   const store = await requireOrganization()
-  await requirePermission('manage_staff', store?.slug)
+  await requireAIPermission('manage_staff', store?.slug)
 
   // Cari anggota toko berdasarkan nama atau email
   const member = await prisma.member.findFirst({
