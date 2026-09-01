@@ -79,8 +79,13 @@ export async function askGeminiAction(prompt: string, history: ChatMessageParam[
 
     if (!res1.ok) {
       const errText = await res1.text();
-      console.error("OpenRouter API Error (1):", errText);
-      return { success: false, text: "Saat ini, AI sedang mengalami lonjakan traffic. Mohon maaf atas ketidaknyamanannya." };
+      console.error("[RAW OPENROUTER ERROR STEP 1]:", errText);
+      let parsedMessage = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        parsedMessage = errJson.error?.message || errText;
+      } catch {}
+      return { success: false, text: `AI Error: ${parsedMessage}` };
     }
 
     const data1 = await res1.json();
@@ -89,7 +94,11 @@ export async function askGeminiAction(prompt: string, history: ChatMessageParam[
 
     // Jika AI tidak meminta pemanggilan tool
     if (!message1?.tool_calls || message1.tool_calls.length === 0) {
-      let textContent = message1?.content || "Saat ini, AI sedang mengalami lonjakan traffic. Mohon maaf atas ketidaknyamanannya.";
+      let textContent = message1?.content;
+      if (!textContent) {
+        console.error("[RAW OPENROUTER EMPTY RESPONSE STEP 1]:", JSON.stringify(data1, null, 2));
+        return { success: false, text: "AI tidak memberikan respon teks." };
+      }
       textContent = textContent.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "").trim();
       return { success: true, text: textContent };
     }
@@ -175,19 +184,30 @@ export async function askGeminiAction(prompt: string, history: ChatMessageParam[
 
     if (!res2.ok) {
       const errText = await res2.text();
-      console.error("OpenRouter API Error (2):", errText);
-      return { success: false, text: "Saat ini, AI sedang mengalami lonjakan traffic. Mohon maaf atas ketidaknyamanannya." };
+      console.error("[RAW OPENROUTER ERROR STEP 2]:", errText);
+      let parsedMessage = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        parsedMessage = errJson.error?.message || errText;
+      } catch {}
+      return { success: false, text: `AI Error: ${parsedMessage}` };
     }
 
     const data2 = await res2.json();
-    let finalContent = data2.choices?.[0]?.message?.content || "Saat ini, AI sedang mengalami lonjakan traffic. Mohon maaf atas ketidaknyamanannya.";
+    let finalContent = data2.choices?.[0]?.message?.content;
+
+    if (!finalContent) {
+      console.error("[RAW OPENROUTER EMPTY RESPONSE STEP 2]:", JSON.stringify(data2, null, 2));
+      return { success: false, text: "AI tidak memberikan respon teks setelah eksekusi fungsi." };
+    }
 
     // Bersihkan tag mentah <think>...</think> dan <tool_call>...</tool_call>
     finalContent = finalContent.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, "").trim();
 
     return { success: true, text: finalContent || "Berikut adalah tanggapan berdasarkan analisis data toko Anda." };
   } catch (error: any) {
-    console.error("AI Chat Error:", error);
-    return { success: false, text: "Saat ini, AI sedang mengalami lonjakan traffic. Mohon maaf atas ketidaknyamanannya." };
+    console.error("[RAW AI CHAT EXCEPTION]:", error);
+    const errorDetail = error?.message || String(error);
+    return { success: false, text: `Terjadi kesalahan pada AI: ${errorDetail}` };
   }
 }

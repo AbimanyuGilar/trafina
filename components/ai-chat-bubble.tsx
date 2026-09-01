@@ -207,7 +207,7 @@ export default function AIChatBubble() {
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end">
       {/* Modal Dialog Chat */}
       {isOpen && (
-        <div className="fixed inset-0 sm:inset-auto sm:mb-4 w-full h-full sm:w-[400px] sm:h-[520px] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-gray-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 z-50">
+        <div className="fixed inset-0 sm:relative sm:inset-auto sm:mb-3 w-full h-full sm:w-[400px] sm:h-[520px] sm:max-h-[calc(100vh-120px)] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-gray-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 z-50">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex items-center justify-between shadow-sm shrink-0">
             <div className="flex items-center gap-2.5">
