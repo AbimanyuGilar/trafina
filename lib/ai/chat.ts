@@ -44,6 +44,34 @@ function cleanRawAiOutput(text: string): string {
     .trim();
 }
 
+function formatOpenRouterError(status: number, errText: string): string {
+  console.error(`[RAW OPENROUTER ERROR ${status}]:`, errText);
+  if (
+    status === 429 ||
+    errText.includes("Rate limit exceeded") ||
+    errText.includes("free-models-per-day") ||
+    errText.includes("rate_limit")
+  ) {
+    return "Maaf, saat ini AI sedang mencapai limit, silahkan coba lagi besok.";
+  }
+
+  try {
+    const parsed = JSON.parse(errText);
+    if (parsed.error?.message) {
+      if (
+        parsed.error.code === 429 ||
+        parsed.error.message.includes("Rate limit") ||
+        parsed.error.message.includes("free-models-per-day")
+      ) {
+        return "Maaf, saat ini AI sedang mencapai limit, silahkan coba lagi besok.";
+      }
+      return `AI Error: ${parsed.error.message}`;
+    }
+  } catch {}
+
+  return `AI Error: ${errText}`;
+}
+
 export async function askAiAction(prompt: string, history: ChatMessageParam[] = []) {
   // 1. Verifikasi Autentikasi Organisasi
   const store = await requireOrganization();
@@ -67,7 +95,7 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
   try {
     // Filter history agar tidak membawa log error sistem sebelumnya
     const cleanHistory = history.filter(
-      (msg) => !msg.text.includes("Gagal memproses data") && !msg.text.includes("AI Error:")
+      (msg) => !msg.text.includes("Gagal memproses data") && !msg.text.includes("AI Error") && !msg.text.includes("mencapai limit")
     );
 
     const formattedMessages: Array<any> = [
@@ -98,7 +126,7 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
 
     if (!res1.ok) {
       const errText = await res1.text();
-      return { success: false, text: `AI Error Step 1: ${errText}` };
+      return { success: false, text: formatOpenRouterError(res1.status, errText) };
     }
 
     const data1 = await res1.json();
@@ -187,7 +215,7 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
 
     if (!res2.ok) {
       const errText = await res2.text();
-      return { success: false, text: `AI Error Step 2: ${errText}` };
+      return { success: false, text: formatOpenRouterError(res2.status, errText) };
     }
 
     const data2 = await res2.json();
@@ -200,6 +228,10 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
     return { success: true, text: finalContent };
   } catch (error: any) {
     console.error("[RAW AI CHAT EXCEPTION]:", error);
-    return { success: false, text: `Terjadi kesalahan sistem: ${error?.message || String(error)}` };
+    const errMsg = error?.message || String(error);
+    if (errMsg.includes("Rate limit") || errMsg.includes("429") || errMsg.includes("free-models-per-day")) {
+      return { success: false, text: "Maaf, saat ini AI sedang mencapai limit, silahkan coba lagi besok." };
+    }
+    return { success: false, text: `Terjadi kesalahan sistem: ${errMsg}` };
   }
 }
