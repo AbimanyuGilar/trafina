@@ -1,6 +1,28 @@
 import prisma from "../prisma"
 import { requireOrganization, requireAIPermission } from "../auth-guard"
 
+function formatDateIndonesian(dateInput: string | Date | number): string {
+  const d = new Date(dateInput)
+  if (isNaN(d.getTime())) return String(dateInput)
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function formatDateTimeIndonesian(dateInput: string | Date | number): string {
+  const d = new Date(dateInput)
+  if (isNaN(d.getTime())) return String(dateInput)
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export async function getSalesFromDB(startDate?: string, endDate?: string, isAllTime?: boolean) {
   const store = await requireOrganization()
 
@@ -48,12 +70,12 @@ export async function getSalesFromDB(startDate?: string, endDate?: string, isAll
     const todayStr = new Date().toISOString().split('T')[0]
     const startStr = startDate || todayStr
     const endStr = endDate || todayStr
-    periodLabel = startStr === endStr ? startStr : `${startStr} s/d ${endStr}`
+    periodLabel = startStr === endStr ? formatDateIndonesian(startStr) : `${formatDateIndonesian(startStr)} s/d ${formatDateIndonesian(endStr)}`
   } else if (transactions.length > 0) {
     const dates = transactions.map((t) => new Date(t.createdAt).getTime())
-    const minDate = new Date(Math.min(...dates)).toISOString().split('T')[0]
-    const maxDate = new Date(Math.max(...dates)).toISOString().split('T')[0]
-    periodLabel = `Keseluruhan (${minDate} s/d ${maxDate})`
+    const minDate = Math.min(...dates)
+    const maxDate = Math.max(...dates)
+    periodLabel = `${formatDateIndonesian(minDate)} s/d ${formatDateIndonesian(maxDate)}`
   }
 
   if (transactions.length === 0) {
@@ -83,10 +105,10 @@ export async function getSalesFromDB(startDate?: string, endDate?: string, isAll
     recentTransactionsSummary: transactions.slice(0, 50).map((t) => ({
       id: t.id,
       totalPrice: t.totalPrice,
-      type: t.transactionType,
+      type: t.transactionType === 'INCOME' ? 'Pemasukan' : 'Pengeluaran',
       category: t.transactionCategory,
       paymentMethod: t.paymentMethod,
-      createdAt: t.createdAt.toISOString(),
+      date: formatDateTimeIndonesian(t.createdAt),
       detail: t.detail,
     })),
   }
