@@ -11,6 +11,7 @@ import {
   getPaymentMethodsFromDB,
   getUserInfoFromDB,
 } from "./functions";
+import { getFullOrganization } from "../organizations";
 
 const SYSTEM_INSTRUCTION = `Anda adalah asisten AI resmi khusus operasional toko (POS & Manajemen Toko). 
 
@@ -174,6 +175,8 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
 
     try {
       switch (toolName) {
+        case 'get_store_info':
+          toolResult = await getFullOrganization()
         case 'get_sales_report': {
           const { valid, startDate, endDate } = validateDateRange(rawArgs.startDate, rawArgs.endDate);
           toolResult = valid

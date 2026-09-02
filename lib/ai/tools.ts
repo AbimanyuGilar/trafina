@@ -1,3 +1,11 @@
+export const getStoreInfo = {
+  name: 'get_store_info',
+  description: 'Mengambil informasi toko.',
+  parameters: {
+    type: 'object',
+  }
+};
+
 export const getSalesReport = {
   name: 'get_sales_report',
   description: 'Mengambil laporan/ringkasan penjualan toko. Jika pengguna meminta penjualan keseluruhan/semua data/laporan keseluruhan atau tidak menyebutkan tanggal spesifik, set isAllTime: true. Jika pengguna meminta periode tertentu, tentukan startDate dan endDate (format YYYY-MM-DD).',
