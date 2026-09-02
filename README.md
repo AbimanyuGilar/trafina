@@ -15,21 +15,21 @@
 
 ## 📋 Daftar Isi
 
-- [Tentang Proyek](#-tentang-proyek)
-- [Fitur Unggulan](#-fitur-unggulan)
-- [Demo & Screenshot](#-demo--screenshot)
-- [Teknologi](#️-teknologi)
-- [Arsitektur Sistem](#-arsitektur-sistem)
-- [Instalasi & Setup](#-instalasi--setup)
-- [Penggunaan](#-penggunaan)
-- [API Documentation](#-api-documentation)
-- [Testing](#-testing)
-- [Tim Developer](#-tim-developer)
-- [Lisensi](#-lisensi)
+- [Tentang Proyek](#tentang-proyek)
+- [Fitur Unggulan](#fitur-unggulan)
+- [Demo & Screenshot](#demo--screenshot)
+- [Teknologi](#teknologi)
+- [Arsitektur Sistem](#arsitektur-sistem)
+- [Instalasi & Setup](#instalasi--setup)
+- [Penggunaan](#penggunaan)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Tim Developer](#tim-developer)
+- [Lisensi](#lisensi)
 
 ---
 
-## 👥 Tim Developer
+## Tim Developer
 
 | Nama | Peran | GitHub |
 |------|-------|--------|
@@ -39,7 +39,7 @@
 
 ---
 
-## 🎯 Tentang Proyek
+## Tentang Proyek
 
 ### Latar Belakang
 
@@ -57,7 +57,7 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 
 ---
 
-## ✨ Fitur Unggulan
+## Fitur Unggulan
 
 ### Fitur Utama
 
@@ -77,7 +77,7 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 
 ---
 
-## 📸 Demo & Screenshot
+## Demo & Screenshot
 
 ### Live Demo
 
@@ -101,7 +101,7 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 
 ---
 
-## 🛠️ Teknologi
+## Teknologi
 
 ### Tech Stack
 
@@ -158,7 +158,7 @@ Package Mgmt : pnpm / npm / yarn
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## Arsitektur Sistem
 
 ### System Architecture
 
@@ -194,7 +194,7 @@ itechnocup26/
 
 ---
 
-## ⚙️ Instalasi & Setup
+## Instalasi & Setup
 
 ### Prerequisites
 
@@ -287,7 +287,7 @@ Buka browser dan akses halaman aplikasi di **`http://localhost:3000`**
 
 ---
 
-## 🚀 Penggunaan
+## Penggunaan
 
 ### Menjalankan Skrip Utama
 
@@ -316,7 +316,7 @@ npm run lint
 
 ---
 
-## 📚 API Documentation
+## API Documentation
 
 ### Base URL
 
@@ -337,7 +337,7 @@ POST /api/auth/sign-out         # Keluar dari akun saat ini
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Lakukan pengujian linting kode
@@ -349,7 +349,7 @@ npx prisma validate
 
 ---
 
-## 📄 Lisensi
+## Lisensi
 
 Proyek ini dilisensikan di bawah [MIT License](LICENSE) - lihat file LICENSE untuk detail lebih lanjut.
 
