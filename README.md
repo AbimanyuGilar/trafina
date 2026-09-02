@@ -18,13 +18,13 @@
 - [Tentang Proyek](#-tentang-proyek)
 - [Fitur Unggulan](#-fitur-unggulan)
 - [Demo & Screenshot](#-demo--screenshot)
-- [Teknologi](#-teknologi)
+- [Teknologi](#️-teknologi)
 - [Arsitektur Sistem](#-arsitektur-sistem)
 - [Instalasi & Setup](#-instalasi--setup)
 - [Penggunaan](#-penggunaan)
 - [API Documentation](#-api-documentation)
 - [Testing](#-testing)
-- [Tim Developer](#-tim-pengembang)
+- [Tim Developer](#-tim-developer)
 - [Lisensi](#-lisensi)
 
 ---
