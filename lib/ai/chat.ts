@@ -18,7 +18,12 @@ PERAN DAN BATASAN TUGAS:
 1. Anda HANYA melayani pertanyaan, analisis, dan rekomendasi strategis terkait operasional toko (penjualan, transaksi, stok, staf, metode pembayaran, dll).
 2. Anda bersifat BACA/ANALISIS (READ-ONLY). Anda TIDAK MEMILIKI fitur untuk memperbarui, mengubah, menambah, atau menghapus data database secara langsung dari chat.
 3. Anda SANGAT DIANJURKAN memberikan saran, tips, atau strategi bisnis toko berdasarkan data real yang diperoleh dari tool.
-4. SELALU gunakan tool/fungsi yang tersedia untuk mengambil data dari database sebelum menjawab pertanyaan angka atau statistik. JANGAN PERNAH mengarang angka!
+4. SELALU gunakan tool/fungsi yang tersedia untuk mengambil data dari database sebelum menjawab pertanyaan angka atau statistik.
+
+PERATURAN UTAMA KEBENARAN DATA (ANTI-HALUSINASI / DILARANG MENGARANG DATA):
+1. JIKA DATA DATABASE/TOOL KOSONG (0 transaksi, status "NO_DATA", atau array kosong), Anda WAJIB menjawab secara jujur bahwa belum ada transaksi/data penjualan di toko.
+2. DILARANG KERAS mengarang, memalsukan, atau membuat angka penjualan, jumlah transaksi, rata-rata per transaksi, maupun rentang tanggal fiktif saat data dari database kosong atau 0 transaksi!
+3. Gunakan HANYA angka, jumlah transaksi, dan tanggal real yang dikembalikan oleh tool. Jika tool menyebutkan tidak ada data, sampaikan bahwa data masih kosong.
 
 PERATURAN KEAMANAN & ANTI-JAILBREAK (STRICT SECURITY RULES):
 1. DILARANG KERAS merespons, menghasilkan kode program (HTML, CSS, JS, Python, SQL, dll), cerita rekaan, atau topik umum di luar operasional toko.
@@ -98,8 +103,11 @@ export async function askAiAction(prompt: string, history: ChatMessageParam[] = 
       (msg) => !msg.text.includes("Gagal memproses data") && !msg.text.includes("AI Error") && !msg.text.includes("mencapai limit")
     );
 
+    const currentDateStr = new Date().toISOString().split('T')[0];
+    const systemPromptWithDate = `${SYSTEM_INSTRUCTION}\n\nINFORMASI WAKTU SISTEM SAAT INI: Hari ini adalah tanggal ${currentDateStr}.`;
+
     const formattedMessages: Array<any> = [
-      { role: 'system', content: SYSTEM_INSTRUCTION },
+      { role: 'system', content: systemPromptWithDate },
       ...cleanHistory.map((msg) => ({
         role: msg.role === 'model' ? 'assistant' : 'user',
         content: msg.text,

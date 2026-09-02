@@ -1,12 +1,12 @@
 export const getSalesReport = {
   name: 'get_sales_report',
-  description: 'Mengambil laporan/ringkasan penjualan toko. Jika pengguna meminta laporan saat ini/hari ini atau tidak menyebutkan tanggal, panggil fungsi ini tanpa menyertakan tanggal (atau gunakan tanggal hari ini). Jika pengguna meminta penjualan keseluruhan/semua data, panggil fungsi ini dengan isAllTime: true.',
+  description: 'Mengambil laporan/ringkasan penjualan toko. Jika pengguna meminta penjualan keseluruhan/semua data/laporan keseluruhan atau tidak menyebutkan tanggal spesifik, set isAllTime: true. Jika pengguna meminta periode tertentu, tentukan startDate dan endDate (format YYYY-MM-DD).',
   parameters: {
     type: 'object',
     properties: {
       startDate: { type: 'string', description: 'Tanggal awal format YYYY-MM-DD (Opsional)' },
       endDate: { type: 'string', description: 'Tanggal akhir format YYYY-MM-DD (Opsional)' },
-      isAllTime: { type: 'boolean', description: 'Set true jika pengguna meminta semua data/penjualan keseluruhan (Opsional)' },
+      isAllTime: { type: 'boolean', description: 'Set true jika pengguna meminta semua data / penjualan keseluruhan / total penjualan toko (Opsional)' },
     },
   }
 };

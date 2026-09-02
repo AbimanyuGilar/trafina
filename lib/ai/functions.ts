@@ -10,7 +10,9 @@ export async function getSalesFromDB(startDate?: string, endDate?: string, isAll
     organizationId: store?.id,
   }
 
-  if (!isAllTime) {
+  const fetchAllTime = isAllTime || (!startDate && !endDate);
+
+  if (!fetchAllTime) {
     const todayStr = new Date().toISOString().split('T')[0]
     const finalStart = startDate || todayStr
     const finalEnd = endDate || todayStr
@@ -27,11 +29,67 @@ export async function getSalesFromDB(startDate?: string, endDate?: string, isAll
     }
   }
 
-  const data = await prisma.transaction.findMany({
+  const transactions = await prisma.transaction.findMany({
     where: whereClause,
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      totalPrice: true,
+      transactionType: true,
+      transactionCategory: true,
+      paymentMethod: true,
+      createdAt: true,
+      detail: true,
+    },
   })
 
-  return data
+  let periodLabel = "Keseluruhan (Semua Waktu)"
+  if (!fetchAllTime) {
+    const todayStr = new Date().toISOString().split('T')[0]
+    const startStr = startDate || todayStr
+    const endStr = endDate || todayStr
+    periodLabel = startStr === endStr ? startStr : `${startStr} s/d ${endStr}`
+  } else if (transactions.length > 0) {
+    const dates = transactions.map((t) => new Date(t.createdAt).getTime())
+    const minDate = new Date(Math.min(...dates)).toISOString().split('T')[0]
+    const maxDate = new Date(Math.max(...dates)).toISOString().split('T')[0]
+    periodLabel = `Keseluruhan (${minDate} s/d ${maxDate})`
+  }
+
+  if (transactions.length === 0) {
+    return {
+      status: "NO_DATA",
+      message: "Belum ada transaksi/data penjualan di database toko untuk periode ini.",
+      period: periodLabel,
+      totalSales: 0,
+      totalTransactions: 0,
+      averagePerTransaction: 0,
+      transactions: [],
+    }
+  }
+
+  const incomeTransactions = transactions.filter((t) => t.transactionType === 'INCOME')
+  const totalSales = incomeTransactions.reduce((acc, t) => acc + t.totalPrice, 0)
+  const totalTransactions = transactions.length
+  const averagePerTransaction = totalTransactions > 0 ? Math.round(totalSales / totalTransactions) : 0
+
+  return {
+    status: "SUCCESS",
+    period: periodLabel,
+    totalSales,
+    totalTransactions,
+    averagePerTransaction,
+    incomeTransactionCount: incomeTransactions.length,
+    recentTransactionsSummary: transactions.slice(0, 50).map((t) => ({
+      id: t.id,
+      totalPrice: t.totalPrice,
+      type: t.transactionType,
+      category: t.transactionCategory,
+      paymentMethod: t.paymentMethod,
+      createdAt: t.createdAt.toISOString(),
+      detail: t.detail,
+    })),
+  }
 }
 
 export async function getProductsFromDB() {
