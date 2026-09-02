@@ -4,7 +4,7 @@
   ### Aplikasi Kasir POS & Manajerial Bisnis UMKM Berbasis AI
   
   [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Visit_Site-success?style=for-the-badge)](https://trafina.vercel.app)
-  [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/)
+  [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/AbimanyuGilar/itechnocup26)
   [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
   
   **Submission for ITECHNO CUP 2026 - Web Development**
@@ -33,9 +33,9 @@
 
 | Nama | Peran | GitHub |
 |------|-------|--------|
-| **Abimanyu** | Fullstack Developer | [GitHub](https://github.com/) |
-| **Bennaya** | Fullstack Developer | [GitHub](https://github.com/) |
-| **Adzi** | Fullstack Developer | [GitHub](https://github.com/) |
+| **Abimanyu** | Fullstack Developer | [GitHub](https://github.com/AbimanyuGilar) |
+| **Bennaya** | Fullstack Developer | [GitHub](https://github.com/bennohan) |
+| **Adzi** | Fullstack Developer | [GitHub](https://github.com/satrioadzi) |
 
 ---
 
@@ -47,7 +47,7 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 
 ### Solusi yang Ditawarkan
 
-**Trafina** hadir sebagai platform *Point of Sale* (POS) dan manajemen operasional bisnis berbasis cloud terintegrasi. Dilengkapi dengan **Asisten Bisnis berbasis AI (Google Gemini)**, Trafina memungkinkan pemilik bisnis dan kasir untuk mencatat transaksi dengan kilat, memantau persediaan stok secara real-time, mengelola multi-cabang/organisasi, serta mendapatkan analisis dan saran strategis bisnis secara otomatis.
+**Trafina** hadir sebagai platform *Point of Sale* (POS) dan manajemen operasional bisnis berbasis cloud terintegrasi. Dilengkapi dengan **Asisten Bisnis berbasis AI**, Trafina memungkinkan pemilik bisnis dan kasir untuk mencatat transaksi dengan kilat, memantau persediaan stok secara real-time, mengelola multi-cabang/organisasi, serta mendapatkan analisis dan saran strategis bisnis secara otomatis.
 
 ### Tujuan Proyek
 
@@ -65,7 +65,7 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 |----------|--------------|---------------|
 | **Kasir POS Super Cepat** | Sistem pencatatan kasir instan dengan dukungan berbagai metode pembayaran (Tunai, QRIS, Transfer Bank). | Mempercepat proses checkout dan meminimalkan antrean pelanggan. |
 | **Manajemen Produk & Stok** | Pengelolaan katalog barang, kategori produk, dan pelacakan persediaan stok otomatis. | Mencegah kehabisan stok barang dan memberikan notifikasi stok menipis. |
-| **AI Business Assistant** | Chatbot cerdas terintegrasi Google Gemini untuk analisis data transaksi & konsultasi strategi bisnis. | Memberikan wawasan bisnis mendalam tanpa perlu menyewa konsultan independen. |
+| **AI Business Assistant** | Chatbot cerdas terintegrasi OpenRouter AI untuk analisis data transaksi & konsultasi strategi bisnis. | Memberikan wawasan bisnis mendalam tanpa perlu menyewa konsultan independen. |
 | **Multi-Organisasi & Tim** | Pengelolaan cabang toko atau organisasi bisnis dalam satu akun beserta sistem undangan tim. | Kolaborasi efisien dengan pengaturan peran (*role*) dan hak akses yang fleksibel. |
 
 ### Fitur Tambahan
@@ -86,17 +86,17 @@ Pelaku UMKM (Usaha Mikro, Kecil, dan Menengah) sering kali menghadapi tantangan 
 ### Screenshot Aplikasi
 
 <div align="center">
-  <img src="[URL_SCREENSHOT_HOMEPAGE]" alt="Homepage Trafina" width="800"/>
+  <img src="images/homepage.png" alt="Homepage Trafina" height="400"/>
   <p><em>Homepage - Tampilan utama dan informasi platform Trafina</em></p>
   
-  <img src="[URL_SCREENSHOT_POS]" alt="Point of Sale Dashboard" width="800"/>
+  <img src="images/cashier.png" alt="Point of Sale Dashboard" height="400"/>
   <p><em>Sistem Kasir POS - Interface pencatatan transaksi cepat</em></p>
   
-  <img src="[URL_SCREENSHOT_MANAGE]" alt="Manajemen Stok & Produk" width="800"/>
+  <img src="images/product.png" alt="Manajemen Stok & Produk" height="400"/>
   <p><em>Manajemen Produk - Pengelolaan katalog dan stok barang</em></p>
   
-  <img src="[URL_SCREENSHOT_AI]" alt="AI Business Assistant" width="800"/>
-  <p><em>AI Assistant - Konsultasi & analisis keuangan bisnis berbasis Google Gemini</em></p>
+  <img src="images/ai.png" alt="AI Business Assistant" height="400"/>
+  <p><em>AI Assistant - Konsultasi & analisis keuangan bisnis berbasis AI</em></p>
 </div>
 
 ---
@@ -120,7 +120,7 @@ Auth & Sec   : Better Auth
 Database     : PostgreSQL (Supabase / `@prisma/adapter-pg`)
 ORM          : Prisma ORM v7
 Mail Service : Nodemailer
-AI Model     : Google GenAI SDK (`@google/genai` - Gemini 2.5)
+AI Engine    : OpenRouter API
 ```
 
 #### DevOps & Tools
@@ -136,7 +136,7 @@ Package Mgmt : pnpm / npm / yarn
 |-----------|------------------|
 | **Next.js 16 & React 19** | Memberikan performa render yang cepat dengan Server Components & Server Actions untuk operasi kasir yang *seamless*. |
 | **Prisma ORM v7 & PostgreSQL** | Memudahkan pengelolaan skema basis data terstruktur dengan *type-safety* tinggi serta skalabilitas data yang andal. |
-| **Google GenAI (Gemini)** | Pemrosesan bahasa alami yang responsif untuk menganalisis statistik bisnis dan menjawab pertanyaan manajerial secara cepat. |
+| **OpenRouter API** | Pemrosesan bahasa alami yang responsif untuk menganalisis statistik bisnis dan menjawab pertanyaan manajerial secara cepat melalui OpenRouter. |
 | **Better Auth** | Solusi otentikasi fleksibel dan aman yang mendukung manajemen sesi, verifikasi email, serta kontrol akses multi-organisasi. |
 
 ### Dependencies Utama
@@ -147,7 +147,6 @@ Package Mgmt : pnpm / npm / yarn
     "next": "16.2.12",
     "react": "19.2.4",
     "@prisma/client": "^7.9.0",
-    "@google/genai": "^2.19.0",
     "better-auth": "^1.6.25",
     "tailwind-merge": "^3.6.0",
     "lucide-react": "^1.30.0",
@@ -170,8 +169,8 @@ flowchart TD
     Client -->|Server Actions & API Routes| Server[Next.js App Server]
     Server -->|ORM Queries| Prisma[Prisma ORM 7]
     Prisma -->|PostgreSQL Connection| DB[(PostgreSQL Database)]
-    Server -->|Analisis & Prompt AI| Gemini[Google Gemini AI Engine]
-    Server -->|Kirim Email Verifikasi| Mail[Nodemailer SMTP]
+    Server -->|Analisis & Prompt AI| OpenRouter[OpenRouter AI Engine]
+    Server -->|Kirim Email Verifikasi| Mail[Nodemailer]
 ```
 
 ### Folder Structure
@@ -223,24 +222,44 @@ npm install
 
 #### 3️⃣ Setup Environment Variables
 
-Buat file `.env` di direktori utama (*root directory*):
+Salin file `.env.example` menjadi `.env` di direktori utama (*root directory*):
+
+```bash
+cp .env.example .env
+```
+
+Isi variabel lingkungan pada file `.env` sesuai dengan konfigurasi Anda:
 
 ```env
-# Database Connection
-DATABASE_URL="postgresql://user:password@localhost:5432/trafina_db"
+# ==========================================
+# DATABASE CONFIGURATION
+# ==========================================
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trafina_db?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/trafina_db?schema=public"
 
-# Better Auth Configuration
-BETTER_AUTH_SECRET="your_better_auth_secret_key"
+# ==========================================
+# SUPABASE CONFIGURATION FOR IMAGES STORAGE
+# ==========================================
+NEXT_PUBLIC_SUPABASE_URL=https://your_url.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# ==========================================
+# BETTER AUTH CONFIGURATION
+# ==========================================
+BETTER_AUTH_SECRET="your_better_auth_secret_key_min_32_chars"
 BETTER_AUTH_URL="http://localhost:3000"
 
-# Google Gemini AI Key
-GEMINI_API_KEY="your_google_gemini_api_key"
+# ==========================================
+# OPENROUTER AI CONFIGURATION
+# ==========================================
+OPENROUTER_API_KEY="your_openrouter_api_key"
+OPENROUTER_MODEL="openrouter/free"
 
-# Email Verification (SMTP Nodemailer)
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER="your_email@gmail.com"
-SMTP_PASS="your_app_password"
+# ==========================================
+# EMAIL VERIFICATION
+# ==========================================
+EMAIL_SERVER_USER="your_email@gmail.com"
+EMAIL_SERVER_PASSWORD="your_app_password"
 ```
 
 #### 4️⃣ Setup Database & Prisma
@@ -338,6 +357,6 @@ Proyek ini dilisensikan di bawah [MIT License](LICENSE) - lihat file LICENSE unt
 
 <div align="center">
 
-  **Made with ❤️ by Tim Abimanyu, Bennaya, & Adzi for ITECHNO CUP 2026**
+  **Made with ❤️ by 3Brothers.exe for ITECHNO CUP 2026**
 
 </div>
