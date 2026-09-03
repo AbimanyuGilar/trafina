@@ -93,99 +93,62 @@ export default function CompanyDetail({ companyData }: { companyData: any }) {
         </div>
       </div>
 
-      {/* 3. Tab Navigation */}
-      <div className="border-b border-slate-200">
-        <nav className="flex gap-6">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'overview'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Informasi Umum
-          </button>
-          <button
-            onClick={() => setActiveTab('activity')}
-            className={`pb-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-              activeTab === 'activity'
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            Aktivitas Terakhir
-          </button>
-        </nav>
-      </div>
-
-      {/* 4. Tab Content: Informasi Umum */}
-      {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Kontak & Lokasi */}
-          {companyData.metadata?.phone && (
-            <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
-              <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
-                Informasi Kontak
-              </h2>
-              <div className="space-y-3.5 text-sm">
-                <div className="flex items-start gap-3">
-                  <Phone size={18} className="text-slate-400 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
-                    <p className="text-slate-800 font-medium">{companyData.metadata.phone}</p>
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Kontak & Lokasi */}
+        {companyData.metadata?.phone && (
+          <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
+            <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
+              Informasi Kontak
+            </h2>
+            <div className="space-y-3.5 text-sm">
+              <div className="flex items-start gap-3">
+                <Phone size={18} className="text-slate-400 mt-0.5" />
+                <div>
+                  <p className="text-xs text-slate-500">Telepon / WhatsApp</p>
+                  <p className="text-slate-800 font-medium">{companyData.metadata.phone}</p>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Alamat & Sistem */}
-          {(companyData.metadata?.address || companyData.createdAt) && (
-            <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
-              <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
-                Alamat & Registrasi
-              </h2>
-              <div className="space-y-3.5 text-sm">
-                {companyData.metadata?.address && (
-                  <div className="flex items-start gap-3">
-                    <MapPin size={18} className="text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Alamat Lengkap</p>
-                      <p className="text-slate-800 font-medium leading-relaxed">{companyData.metadata.address}</p>
-                    </div>
+        {(companyData.metadata?.address || companyData.createdAt) && (
+          <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm space-y-4">
+            <h2 className="text-base font-semibold text-slate-900 border-b border-slate-100 pb-3">
+              Registrasi
+            </h2>
+            <div className="space-y-3.5 text-sm">
+              {companyData.metadata?.address && (
+                <div className="flex items-start gap-3">
+                  <MapPin size={18} className="text-slate-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-slate-500">Alamat Lengkap</p>
+                    <p className="text-slate-800 font-medium leading-relaxed">{companyData.metadata.address}</p>
                   </div>
-                )}
+                </div>
+              )}
 
-                {companyData.createdAt && (
-                  <div className="flex items-start gap-3">
-                    <Calendar size={18} className="text-slate-400 mt-0.5" />
-                    <div>
-                      <p className="text-xs text-slate-500">Tanggal Terdaftar</p>
-                      <p className="text-slate-800 font-medium">
-                        {companyData?.createdAt 
-                          ? new Date(companyData.createdAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })
-                          : '-'}
-                      </p>
-                    </div>
+              {companyData.createdAt && (
+                <div className="flex items-start gap-3">
+                  <Calendar size={18} className="text-slate-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-slate-500">Tanggal Terdaftar</p>
+                    <p className="text-slate-800 font-medium">
+                      {companyData?.createdAt 
+                        ? new Date(companyData.createdAt).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })
+                        : '-'}
+                    </p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab Content: Aktivitas */}
-      {activeTab === 'activity' && (
-        <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-sm text-center py-12">
-          <p className="text-sm text-slate-500">Belum ada riwayat aktivitas untuk toko ini.</p>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
