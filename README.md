@@ -33,9 +33,9 @@
 
 | Nama | Peran | GitHub |
 |------|-------|--------|
-| **Abimanyu** | Fullstack Developer | [GitHub](https://github.com/AbimanyuGilar) |
-| **Bennaya** | Fullstack Developer | [GitHub](https://github.com/bennohan) |
-| **Adzi** | Fullstack Developer | [GitHub](https://github.com/satrioadzi) |
+| **Abimanyu** | Fullstack Developer, Database Designer, and Project Manager | [GitHub](https://github.com/AbimanyuGilar) |
+| **Bennaya** | Fullstack Developer & UI/UX | [GitHub](https://github.com/bennohan) |
+| **Adzi** | Fullstack Developer & System Designer | [GitHub](https://github.com/satrioadzi) |
 
 ---
 
