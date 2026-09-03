@@ -85,7 +85,7 @@ const KasirDetail = ({ detail }: { detail: string }) => {
     )
   }
 
-  const grandTotal = products.reduce((sum, p) => sum + p.price * p.amount, 0)
+  const grandTotal = products.reduce((sum, p) => sum + p.price, 0)
 
   return (
     <div
@@ -124,14 +124,14 @@ const KasirDetail = ({ detail }: { detail: string }) => {
                 {p.name}
               </p>
               <p className="text-xs mt-0.5" style={{ color: "#94A3B8" }}>
-                {p.amount} × {formatCurrency(p.price)}
+                {p.amount} × {formatCurrency(p.price / p.amount)}
               </p>
             </div>
             <p
               className="text-xs font-semibold flex-shrink-0"
               style={{ color: "#334155" }}
             >
-              {formatCurrency(p.price * p.amount)}
+              {formatCurrency(p.price)}
             </p>
           </div>
         ))}
