@@ -17,7 +17,8 @@ import {
   X, 
   Printer, 
   RefreshCw,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createTransaction } from './actions'
@@ -605,15 +606,17 @@ const CashierPage = ({ products, categories, paymentMethods }: { products: Produ
             <button
               onClick={handleCheckout}
               disabled={isCheckoutDisabled || isSubmitting}
-              className={`w-full font-bold text-sm py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer ${
-                isCheckoutDisabled || isSubmitting
-                  ? 'bg-slate-200 text-slate-400 border border-slate-200 cursor-not-allowed'
-                : 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 hover:shadow-md active:translate-y-px'
+              className={`w-full font-bold text-sm py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed ${
+                isSubmitting
+                  ? 'bg-blue-600 text-white opacity-50 border border-blue-600'
+                  : isCheckoutDisabled
+                  ? 'bg-slate-200 text-slate-400 border border-slate-200'
+                  : 'bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 hover:shadow-md active:translate-y-px'
               }`}
             >
               {isSubmitting ? (
                 <>
-                  <RefreshCw size={15} className="animate-spin" />
+                  <Loader2 size={15} className="animate-spin" />
                   <span>Memproses Transaksi...</span>
                 </>
               ) : (

@@ -733,7 +733,7 @@ export default function ProductPageClient({
                 <button
                   disabled={isLoadingAddCategory}
                   type="submit"
-                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 disabled:bg-blue-300 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-32"
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer disabled:cursor-not-allowed min-w-32"
                 >
                   {isLoadingAddCategory ? (
                     <div className="flex items-center gap-2">

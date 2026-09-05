@@ -181,25 +181,23 @@ export default function RegisterForm() {
         }
 
         {/* Submit Button */}
-				{
-					isRegistering ? (
-						<button
-							disabled
-							className="w-full mt-2 bg-blue-200  text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group"
-						>
-							<Loader2 className='animate-spin' />
-						</button>
-					) : (
-						<button
-							type="submit"
-              disabled={isPasswordMisMatch || !formData.email || !formData.password || !formData.confirmPassword}
-							className="w-full mt-2 disabled:bg-blue-200 disabled:hover:bg-blue-200 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group"
-						>
-							<span>Daftar Sekarang</span>
-							<ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-						</button>
-					)
-				}
+        <button
+          type="submit"
+          disabled={isRegistering || isPasswordMisMatch || !formData.email || !formData.password || !formData.confirmPassword}
+          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group cursor-pointer disabled:cursor-not-allowed"
+        >
+          {isRegistering ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Mendaftar...</span>
+            </>
+          ) : (
+            <>
+              <span>Daftar Sekarang</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            </>
+          )}
+        </button>
       </form>
     </>
   );

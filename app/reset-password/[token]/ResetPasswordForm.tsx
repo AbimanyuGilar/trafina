@@ -156,23 +156,23 @@ const ResetPasswordForm = ({ token, callbackURL }: { token: string; callbackURL:
         )}
       </div>
 
-      {isLoading ? (
-        <button
-          disabled
-          className="w-full bg-blue-200 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
-        >
-          <Loader2 className="animate-spin" />
-        </button>
-      ) : (
-        <button
-          type="submit"
-          disabled={!passwordsMatch || !newPassword || !confirmPassword}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group disabled:bg-blue-200 disabled:cursor-not-allowed"
-        >
-          <span>Reset Password</span>
-          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        </button>
-      )}
+      <button
+        type="submit"
+        disabled={isLoading || !passwordsMatch || !newPassword || !confirmPassword}
+        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 group cursor-pointer disabled:cursor-not-allowed"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Mereset...</span>
+          </>
+        ) : (
+          <>
+            <span>Reset Password</span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </>
+        )}
+      </button>
 
       <div className="text-center pt-2">
         <Link

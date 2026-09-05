@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import {
   Phone, 
   Save, 
-  X 
+  X,
+  Loader2
 } from 'lucide-react'
 import { authClient } from '@/lib/auth-client'
 import { generateUniqueSlug } from '@/lib/generate-slug'
@@ -151,10 +152,19 @@ export default function NewCompanyForm({ userId }: { userId: string }) {
           <button
             type="submit"
             disabled={isLoading}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer disabled:cursor-not-allowed"
           >
-            <Save size={16} />
-            <span>{isLoading ? 'Menyimpan...' : 'Simpan Toko'}</span>
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                <span>Simpan Toko</span>
+              </>
+            )}
           </button>
         </div>
       </form>

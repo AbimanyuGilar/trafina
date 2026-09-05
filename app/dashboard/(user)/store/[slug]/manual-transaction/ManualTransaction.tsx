@@ -785,13 +785,13 @@ export default function ManualTransaction({
                 <button
                   disabled={isAddingTransaction}
                   type="submit"
-                  className="disabled:bg-blue-200 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer disabled:cursor-not-allowed"
                 >
                   {
                     isAddingTransaction
                     ? <div className='flex items-center gap-2'>
                       <Loading size={16} />
-                      Menyimpan...
+                      <span>Menyimpan...</span>
                     </div>
                     : 'Simpan Transaksi'
                   }
@@ -878,14 +878,14 @@ export default function ManualTransaction({
                 <button
                   disabled={isLoadingAddCategory}
                   type="submit"
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-white bg-blue-600 disabled:bg-blue-300 hover:bg-blue-700 active:bg-blue-800 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 rounded-xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer disabled:cursor-not-allowed"
                 >
                   {
                   isLoadingAddCategory 
                   ? (
                     <>
-                      <Loading />
-                      Memuat...
+                      <Loading size={16} />
+                      <span>Menyimpan...</span>
                     </>
                   )
                   :'Tambah Kategori' }
