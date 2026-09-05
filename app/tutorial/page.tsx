@@ -549,7 +549,7 @@ export default function TutorialPage() {
                   <li>Untuk Metode tunai kasir harus menuliskan nominal Uang sesuai dengan yang diterima sebagai pembayaran, selanjutnya kasir dapat menekan tombol <strong>&quot;Selesaikan Transaksi&quot;</strong>.</li>
                 </ol>
 
-                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50">
+                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50 max-w-sm mx-auto">
                   <Image
                     src="/tutorial/tampilan-keranjang.png"
                     alt="Tampilan Keranjang Belanja"
