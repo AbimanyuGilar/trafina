@@ -99,6 +99,7 @@ export default function HomePage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
             <a href="#fitur" className="hover:text-slate-900 transition-colors">Fitur</a>
             <a href="#keunggulan" className="hover:text-slate-900 transition-colors">Keunggulan</a>
+            <Link href="/tutorial" className="hover:text-slate-900 transition-colors">Tutorial & Panduan</Link>
           </nav>
 
           {/* Nav Actions */}
