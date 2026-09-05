@@ -76,7 +76,7 @@ export default function TutorialPage() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
             <Link href="/" className="hover:text-slate-900 transition-colors">Beranda</Link>
-            <Link href="/tutorial" className="text-blue-600 font-semibold">Panduan & Tutorial</Link>
+            <Link href="/tutorial" className="text-blue-600 font-semibold">Tutorial</Link>
           </nav>
 
           <div className="hidden sm:flex items-center gap-3">
@@ -128,7 +128,7 @@ export default function TutorialPage() {
                 Beranda
               </Link>
               <Link href="/tutorial" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold">
-                Panduan & Tutorial
+                Tutorial
               </Link>
             </div>
 
