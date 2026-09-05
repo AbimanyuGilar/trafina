@@ -76,7 +76,7 @@ export default function TutorialPage() {
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
             <Link href="/" className="hover:text-slate-900 transition-colors">Beranda</Link>
-            <Link href="/tutorial" className="text-blue-600 font-semibold">Tutorial</Link>
+            <Link href="/tutorial" className="text-blue-600 font-semibold">Panduan</Link>
           </nav>
 
           <div className="hidden sm:flex items-center gap-3">
@@ -301,7 +301,7 @@ export default function TutorialPage() {
 
                 <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50">
                   <Image
-                    src="/tutorial/halaman-tambah-toko"
+                    src="/tutorial/halaman-tambah-toko.png"
                     alt="Halaman Tambah Toko"
                     width={1200}
                     height={700}
