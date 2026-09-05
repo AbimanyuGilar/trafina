@@ -128,7 +128,7 @@ export default function TutorialPage() {
                 Beranda
               </Link>
               <Link href="/tutorial" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold">
-                Tutorial
+                Panduan
               </Link>
             </div>
 
